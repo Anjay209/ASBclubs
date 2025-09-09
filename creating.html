@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Club - Circle</title>
+    <link rel="stylesheet" href="create-styles.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="logo">
+                <h1>Homestead Clubs</h1>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-dots">
+                    <div class="dot active" data-step="1"></div>
+                    <div class="dot" data-step="2"></div>
+                    <div class="dot" data-step="3"></div>
+                    <div class="dot" data-step="4"></div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- Step 1: Goals -->
+                <div class="step active" id="step-1">
+                    <h2>What is the mission of this club?</h2>
+                    <div class="options">
+                        <label class="option">
+                            <input type="radio" name="goal" value="build">
+                            <span class="option-text">To learn skills</span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="goal" value="migrate">
+                            <span class="option-text">Compete in events</span>
+                        </label>
+                        <label class="option">
+                            <input type="radio" name="goal" value="explore">
+                            <span class="option-text">Other</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Mission -->
+                <div class="step" id="step-2">
+                    <h2>What is your pull-in?</h2>
+                    <div class="input-group">
+                        <label for="mission">Describe what your club is all about</label>
+                        <textarea id="mission" placeholder="Tell us about your club's purpose and goals..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Meeting Times -->
+                <div class="step" id="step-3">
+                    <h2>When does your club meet?</h2>
+                    <div class="input-group">
+                        <label for="meeting-frequency">Meeting Frequency</label>
+                        <select id="meeting-frequency">
+                            <option value="">Select frequency</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="bi-weekly">Bi-weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="as-needed">As needed</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="meeting-time">Preferred Meeting Time</label>
+                        <input type="text" id="meeting-time" placeholder="e.g., Mondays at 7 PM">
+                    </div>
+                </div>
+                
+                <!-- Step 4: Additional Info -->
+                <div class="step" id="step-4">
+                    <h2>Any additional information?</h2>
+                    <div class="input-group">
+                        <label for="additional-info">Share anything else about your club</label>
+                        <textarea id="additional-info" placeholder="Requirements, special features, contact info, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="back-btn" class="nav-btn secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button id="continue-btn" class="nav-btn primary" disabled>Continue</button>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="preview-card">
+                <div class="card-header">
+                    <span class="label">COMMUNITY PROFILE</span>
+                    <h3 id="preview-name">Club Name</h3>
+                </div>
+                
+                <div class="card-content">
+                    <div class="info-group">
+                        <span class="info-label">Community URL</span>
+                        <span id="preview-url">https://club-name.circle.so</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <span class="info-label">Goal</span>
+                        <span id="preview-goal">Not specified</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <span class="info-label">Mission</span>
+                        <span id="preview-mission">Not specified</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <span class="info-label">Meeting Schedule</span>
+                        <span id="preview-schedule">Not specified</span>
+                    </div>
+                    
+                    <div class="info-group">
+                        <span class="info-label">Additional Info</span>
+                        <span id="preview-additional">Not specified</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="user-info">
+                        <div class="avatar">
+                            <span id="user-initial">U</span>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-name">Club Creator</span>
+                            <span class="user-email" id="user-email">creator@email.com</span>
+                        </div>
+                        <span class="user-badge">CR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="create-script.js"></script>
+</body>
+</html>
+                

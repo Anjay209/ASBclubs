@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <title>Sign Up | CertQuest</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <link rel="stylesheet" href="signup.css" />
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+
+ <!-- Firebase SDKs (compat) -->
+<!-- Replace your current Firebase scripts with: -->
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+ <div class="login-outer">
+   <form class="login-container" autocomplete="off">
+     <h1 class="login-title">Sign Up</h1>
+
+
+     <div class="divider-row">
+       <div class="divider"></div>
+       <span class="divider-text">Keep up to date with Homestead Clubs!</span>
+       <div class="divider"></div>
+     </div>
+
+
+     <label for="fullname" class="label">Full Name</label>
+     <input id="fullname" type="text" name="fullname" placeholder="Your full name" required>
+     <label for="email" class="label">Email</label>
+     <input id="email" type="email" name="email" placeholder="Type your email address" required>
+     <label for="password" class="label">Password</label>
+     <input id="password" type="password" name="password" placeholder="Create a password" required>
+     <label for="confirm" class="label">Confirm Password</label>
+     <input id="confirm" type="password" name="confirm" placeholder="Repeat your password" required>
+     <button type="submit" class="sign-up-btn" id="signUpBtn">Sign Up</button>
+     <div class="signup">
+       Already have an account?
+       <a href="login.html">Sign In</a>
+     </div>
+   </form>
+ </div>
+
+
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBoQcPq9ftoTfE8Wm7TOOcol0c_XPBXRpE",
+    authDomain: "asbclubs-40fe1.firebaseapp.com",
+    projectId: "asbclubs-40fe1",
+    storageBucket: "asbclubs-40fe1.appspot.com",
+    messagingSenderId: "534365161502",
+    appId: "1:534365161502:web:940ee13b2b3f105b65860f",
+    measurementId: "G-WCSQQDHHR1"
+  };
+
+  // Global database reference
+  let db;
+
+  // Initialize Firebase
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+      console.log("Firebase initialized successfully");
+    }
+    
+    // Initialize Firestore after Firebase is initialized
+    db = firebase.firestore();
+    
+    // Configure Firestore settings to handle connection issues
+    db.settings({
+      experimentalForceLongPolling: true, // Use long polling instead of WebChannel
+      merge: true
+    });
+    
+    // Enable Firestore persistence with error handling
+    firebase.firestore().enablePersistence({
+      synchronizeTabs: true
+    })
+      .then(() => {
+        console.log("Firestore persistence enabled");
+      })
+      .catch((err) => {
+        if (err.code == 'failed-precondition') {
+          console.warn("Persistence enabled in another tab");
+        } else if (err.code == 'unimplemented') {
+          console.warn("Browser doesn't support persistence");
+        } else {
+          console.warn("Persistence error:", err);
+        }
+      });
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
+
+  // Transaction-safe function to increment member count
+  async function incrementMemberCount() {
+    if (!db) {
+      throw new Error("Firestore not initialized");
+    }
+    
+    const statsRef = db.collection('stats').doc('membersCount');
+    try {
+      await db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(statsRef);
+        if (!doc.exists) {
+          transaction.set(statsRef, { count: 1 });
+        } else {
+          const currentCount = doc.data().count || 0;
+          transaction.update(statsRef, { count: currentCount + 1 });
+        }
+      });
+      console.log("Member count incremented");
+    } catch (error) {
+      console.error("Failed to increment member count:", error);
+      throw error;
+    }
+  }
+
+  // Mark user counted and increment members if not done before
+  async function markUserCounted(userDocRef) {
+    if (!db) {
+      throw new Error("Firestore not initialized");
+    }
+    
+    try {
+      await db.runTransaction(async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists) {
+          throw new Error("User doc does not exist");
+        }
+        const userData = userDoc.data();
+        if (userData.countedInMembers) {
+          return;
+        }
+        // Increment members count
+        const statsRef = db.collection('stats').doc('membersCount');
+        const statsDoc = await transaction.get(statsRef);
+        if (!statsDoc.exists) {
+          transaction.set(statsRef, { count: 1 });
+        } else {
+          const currentCount = statsDoc.data().count || 0;
+          transaction.update(statsRef, { count: currentCount + 1 });
+        }
+        // Mark user as counted
+        transaction.update(userDocRef, { countedInMembers: true });
+      });
+      console.log("User marked as counted");
+    } catch (error) {
+      console.error("Error marking user counted:", error);
+      
+      // If transaction fails due to connection issues, try simple write
+      try {
+        await userDocRef.update({ countedInMembers: true });
+        console.log("User marked as counted (fallback method)");
+      } catch (fallbackError) {
+        console.error("Fallback counting also failed:", fallbackError);
+        throw error; // Re-throw original error
+      }
+    }
+  }
+
+  // Wait for DOM to load before adding event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Email/password sign-up flow
+    const signupForm = document.querySelector('.login-container form') || document.querySelector('form') || document.querySelector('.login-form');
+    
+    if (signupForm) {
+      signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Check if Firebase and Firestore are initialized
+        if (!firebase.auth || !db) {
+          alert("Firebase not properly initialized. Please refresh the page.");
+          return;
+        }
+
+        const fullName = document.getElementById('fullname')?.value?.trim() || document.getElementById('name')?.value?.trim();
+        const email = document.getElementById('email')?.value?.trim();
+        const password = document.getElementById('password')?.value;
+        const confirm = document.getElementById('confirm')?.value || document.getElementById('confirmPassword')?.value;
+
+        // Validation
+        if (!fullName || !email || !password || !confirm) {
+          alert("All fields are required.");
+          return;
+        }
+        if (password !== confirm) {
+          alert("Passwords do not match!");
+          return;
+        }
+
+        try {
+          // Create user with email/password
+          const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+          const user = userCredential.user;
+
+          // Update profile displayName
+          await user.updateProfile({ displayName: fullName });
+
+          // Create user document in Firestore with retry logic
+          const userDocRef = db.collection("users").doc(user.uid);
+          
+          // Retry mechanism for Firestore operations
+          const maxRetries = 3;
+          let retryCount = 0;
+          let success = false;
+          
+          while (retryCount < maxRetries && !success) {
+            try {
+              await userDocRef.set({
+                uid: user.uid,
+                name: fullName,
+                email: email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                countedInMembers: false
+              });
+              
+              // Mark user counted and increment member count
+              await markUserCounted(userDocRef);
+              success = true;
+              
+            } catch (firestoreError) {
+              retryCount++;
+              console.warn(`Firestore operation attempt ${retryCount} failed:`, firestoreError);
+              
+              if (retryCount >= maxRetries) {
+                // If Firestore fails completely, still proceed with auth success
+                console.error("Firestore operations failed after retries, but user account created");
+                // You might want to queue this for later or use a different approach
+                success = true; // Allow signup to proceed
+              } else {
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+              }
+            }
+          }
+
+          // Success - redirect to login page
+          console.log("Signup successful, redirecting...");
+          window.location.href = "login.html";
+          
+        } catch (error) {
+          console.error("Signup error:", {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+          });
+          
+          // User-friendly error messages
+          let errorMessage = "Signup failed. Please try again.";
+          if (error.code === 'auth/email-already-in-use') {
+            errorMessage = "This email is already registered.";
+          } else if (error.code === 'auth/weak-password') {
+            errorMessage = "Password should be at least 6 characters.";
+          } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "Please enter a valid email address.";
+          }
+          
+          alert(errorMessage);
+        }
+      });
+    }
+
+    // Google sign-up/sign-in flow
+    const googleSignUpBtn = document.getElementById('googleSignUpBtn') || document.querySelector('.google-btn');
+    
+    if (googleSignUpBtn) {
+      googleSignUpBtn.addEventListener('click', async function() {
+        // Check if Firebase and Firestore are initialized
+        if (!firebase.auth || !db) {
+          alert("Firebase not properly initialized. Please refresh the page.");
+          return;
+        }
+
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          const result = await firebase.auth().signInWithPopup(provider);
+          const user = result.user;
+          
+          // Handle Google sign-in user data with retry logic
+          const userDocRef = db.collection("users").doc(user.uid);
+          
+          const maxRetries = 3;
+          let retryCount = 0;
+          let success = false;
+          
+          while (retryCount < maxRetries && !success) {
+            try {
+              const doc = await userDocRef.get();
+              
+              if (!doc.exists) {
+                await userDocRef.set({
+                  uid: user.uid,
+                  name: user.displayName,
+                  email: user.email,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  countedInMembers: false
+                });
+                await markUserCounted(userDocRef);
+              }
+              success = true;
+              
+            } catch (firestoreError) {
+              retryCount++;
+              console.warn(`Google sign-in Firestore attempt ${retryCount} failed:`, firestoreError);
+              
+              if (retryCount >= maxRetries) {
+                console.error("Firestore operations failed after retries, but Google sign-in succeeded");
+                success = true; // Allow signin to proceed
+              } else {
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+              }
+            }
+          }
+          
+          // Redirect after Google sign-in - adjust path as needed
+          window.location.href = "index.html";
+          
+        } catch (error) {
+          console.error("Google sign-in error:", error);
+          alert("Google sign-in failed: " + error.message);
+        }
+      });
+    }
+  });
+</script>
+
+
+</body>
+</html>
+
+
+

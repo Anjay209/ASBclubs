@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anjay's Community</title>
+    <link rel="stylesheet" href="collab.css">
+      <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-circle">HHS</div>
+            </div>
+            
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="clubs.html" class="nav-item">Clubs</a>
+            <a href="events.html" class="nav-item">Events</a>
+            <a href="analytics.html" class="nav-item">Dashboard</a>
+        </nav>
+        
+        <div class="header-right">
+            
+           <button class="icon-btn" onclick="window.location.href='index.html?openNotifications=true'">
+    <svg width="18" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+        <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="2"/>
+    </svg>
+</button>
+           
+           
+         
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Thin Left Sidebar -->
+       <aside class="thin-sidebar">
+    <!-- Keep existing buttons -->
+    
+    <!-- Add user clubs section -->
+    <div class="user-clubs-mini" id="userClubsMini">
+        <!-- Clubs will be dynamically inserted here -->
+    </div>
+    
+    <!-- Keep create button -->
+    <a href="create.html"><button class="thin-sidebar-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+    </button></a>
+</aside>
+    </div>
+
+    <div class="container">
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1> Create a new collaboration</h1>
+                <p>Connect with other clubs to amplify your impact. Build partnerships, share resources, and create memorable joint events with just a few clicks.</p>
+                
+                <div class="action-buttons">
+                    <button class="btn-primary" id="createCollabBtn">Start collaboration</button>
+                    <button class="btn-secondary" id="browsePartnersBtn">Browse partners</button>
+                    <button class="btn-toggle" id="openToCollabBtn">Open to Collaborate</button>
+                    <div class="club-switcher">
+
+    <select id="clubSelect" class="club-dropdown">
+        <option value="">Loading clubs...</option>
+    </select>
+</div>
+
+                </div>
+            </div>
+
+         
+
+            <!-- Partnership Marketplace Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2>Partnership Marketplace</h2>
+                    <button class="see-all-btn">See all <i class="fas fa-arrow-right"></i></button>
+                </div>
+                
+                <div class="marketplace-grid">
+                    <!-- Active Collaboration Requests -->
+                    <div class="marketplace-card">
+                        <div class="card-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Active Collaboration Requests</h3>
+                            <p>Connect with clubs actively seeking partners for upcoming events and projects.</p>
+                            <div class="tags">
+                                <span class="tag partnership">Partnership</span>
+                                <span class="tag events">Events</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Exchange -->
+                   
+
+                    <!-- Skill Sharing Network -->
+                    
+                </div>
+            </div>
+
+            <!-- AI Collaboration Engine Section -->
+        
+
+            <!-- Campus Resource Hub Detailed Section -->
+            <div class="section resource-hub-section">
+                <div class="section-header">
+                    <h2>Campus Resource Hub</h2>
+                </div>
+                
+                <div class="resource-categories">
+                    
+                    
+                    <div class="resource-category">
+                        <h3><i class="fas fa-tools"></i> Equipment Library</h3>
+                        <p>A/V gear, tables, supplies with integrated reservation system</p>
+                        <button class="resource-btn">Browse Equipment</button>
+                    </div>
+                    
+                    <div class="resource-category">
+                        <h3><i class="fas fa-address-book"></i> Vendor Directory</h3>
+                        <p>Rated catering, speakers, entertainment with contact information</p>
+                        <button class="resource-btn" onclick="openVendorModal()">View Vendors</button>
+                    </div>
+                    
+                   
+                    
+                    <div class="resource-category">
+    <h3><i class="fas fa-file-alt"></i> Template Exchange</h3>
+    <p>Successful event formats, documents, marketing materials</p>
+    <button class="resource-btn" id="getTemplatesBtn" onclick="openTemplateModal()">Get Templates</button>
+</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar" style="color:  white;">
+            <div class="sidebar-widget featured-collab" style="color:  white;">
+                <h3 style="color: white;">Collaboration launch checklist</h3>
+                <p class="progress-text" style="color:  white;">2/5 steps completed</p>
+                
+                <div class="checklist">
+                    <div class="checklist-item completed">
+                        <div class="checkbox checked">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span style="color:  white;">Create your club profile</span>
+                    </div>
+                    
+                    <div class="checklist-item completed">
+                        <div class="checkbox checked">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span style="color:  white;">Define collaboration goals</span>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <div class="checkbox"></div>
+                        <span style="color:  white;">Browse partnership opportunities</span>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <div class="checkbox"></div>
+                        <span style="color:  white;">Set up resource sharing</span>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <div class="checkbox"></div>
+                        <span style="color:  white;">Launch your first collaboration</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Collaboration -->
+           
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="collaborationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Start New Collaboration</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="collaborationForm">
+                    <div class="form-group">
+                        <label for="collabTitle">Collaboration Title</label>
+                        <input type="text" id="collabTitle" placeholder="e.g., Joint Mental Health Awareness Week">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="collabType">Collaboration Type</label>
+                        <select id="collabType">
+                            <option value="">Select type...</option>
+                            <option value="event">Joint Event</option>
+                            <option value="resource">Resource Sharing</option>
+                            <option value="skill">Skill Exchange</option>
+                            <option value="fundraiser">Collaborative Fundraiser</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetClubs">Target Partner Clubs</label>
+                        <input type="text" id="targetClubs" placeholder="Search clubs by name or category...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" rows="4" placeholder="Describe your collaboration idea and what you're looking for..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeline">Timeline</label>
+                        <input type="date" id="timeline">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget">Estimated Budget</label>
+                        <input type="number" id="budget" placeholder="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelModal">Cancel</button>
+                <button class="btn-primary" id="createCollab">Create Collaboration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add these modals right before the closing </body> tag -->
+
+<!-- Clubs Modal -->
+<div id="clubsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Browse All Clubs</h2>
+            <button class="close-btn" id="closeClubsModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="search-container">
+                <input type="text" id="clubSearch" placeholder="Search clubs..." class="search-input">
+            </div>
+            <div id="clubsList" class="clubs-list">
+                <!-- Clubs will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Partners Modal -->
+<div id="partnersModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Your Partners</h2>
+            <button class="close-btn" id="closePartnersModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="partnersList" class="partners-list">
+                <p>You don't have any partners yet. Start by sending collaboration requests to other clubs.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Collaboration Request Modal (for club owners) -->
+<div id="collabRequestModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>New Collaboration Request</h2>
+            <button class="close-btn" id="closeCollabRequestModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="collabRequestContent">
+                <!-- Request content will be populated here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="rejectCollabRequest">Decline</button>
+            <button class="btn-primary" id="acceptCollabRequest">Accept</button>
+        </div>
+    </div>
+</div>
+
+<div id="activeCollabModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="color: white;">Clubs Open to Collaboration</h2>
+            <span class="close" id="closeActiveCollabModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="search-container">
+                <input type="text" id="activeCollabSearch" placeholder="Search clubs..." class="search-input">
+            </div>
+            <div id="activeCollabList" class="clubs-list">
+                <!-- Clubs will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="equipmentModal" class="modal">
+    <div class="modal-content equipment-modal">
+        <div class="modal-header">
+            <h2 style="color: white;"><i class="fas fa-tools"></i> Equipment Library</h2>
+            <span class="close" id="closeEquipmentModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="equipment-tabs">
+                <button class="tab-btn active" data-category="av">A/V Equipment</button>
+                <button class="tab-btn" data-category="event">Event Equipment</button>
+                <button class="tab-btn" data-category="general">General Supplies</button>
+            </div>
+            <div class="equipment-grid" id="equipmentGrid">
+                <!-- Equipment items will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="vendorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: white;"><i class="fas fa-users"></i> Vendor Directory</h2>
+                <span class="close" onclick="closeVendorModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Add Vendor Form -->
+                <div class="add-vendor-form">
+                    <h3 style="margin-bottom: 1rem; color: #2c3e50;"><i class="fas fa-plus-circle"></i> Add New Vendor</h3>
+                    <form id="addVendorForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vendorType">Vendor Type</label>
+                                <select id="vendorType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Catering">Catering</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Speaker">Speaker</option>
+                                    <option value="Photography">Photography</option>
+                                    <option value="Decorations">Decorations</option>
+                                    <option value="Venue">Venue</option>
+                                    <option value="DJ/Music">DJ/Music</option>
+                                    <option value="Florist">Florist</option>
+                                    <option value="Transportation">Transportation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="vendorName">Vendor Name</label>
+                                <input type="text" id="vendorName" required placeholder="Enter vendor name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="vendorEmail">Email Address</label>
+                            <input type="email" id="vendorEmail" required placeholder="vendor@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="vendorUsage">What did you use them for?</label>
+                            <textarea id="vendorUsage" rows="3" required placeholder="Describe the service provided and your experience..."></textarea>
+                        </div>
+                        <button type="submit" class="add-btn">
+                            <i class="fas fa-plus"></i> Add Vendor
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Vendors List -->
+                <div id="vendorsList">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading vendors...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+   <div id="templateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="color: white;"><i class="fas fa-file-alt"></i> Template Exchange</h2>
+            <span class="close" onclick="closeTemplateModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <!-- Modal Tabs -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="browse-tab" onclick="switchTab('browse-tab')">Browse Templates</button>
+                <button class="tab-btn" data-tab="submit-tab" onclick="switchTab('submit-tab')">Submit Template</button>
+            </div>
+            
+            <!-- Browse Templates Tab -->
+            <div id="browse-tab" class="tab-content active">
+                <div class="search-bar">
+                    <input type="text" id="templateSearch" placeholder="Search templates...">
+                    <button id="searchTemplatesBtn" onclick="searchTemplates()"><i class="fas fa-search"></i></button>
+                </div>
+                <div id="templatesList" class="templates-container">
+                    <!-- Templates will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Submit Template Tab -->
+            <div id="submit-tab" class="tab-content">
+                <div class="submit-template-form">
+                    <h3 style="margin-bottom: 1rem; color: #2c3e50;"><i class="fas fa-upload"></i> Submit New Template</h3>
+                    <form id="submitTemplateForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="templateTitle">Template Title</label>
+                                <input type="text" id="templateTitle" required placeholder="Enter template title">
+                            </div>
+                            <div class="form-group">
+                                <label for="templateType">Type</label>
+                                <select id="templateType" required>
+                                    <option value="">Select type</option>
+                                    <option value="Event Format">Event Format</option>
+                                    <option value="Document">Document</option>
+                                    <option value="Marketing Material">Marketing Material</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="templateDescription">Description</label>
+                            <textarea id="templateDescription" rows="3" required placeholder="Describe the template and its use case..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="templateFile">Upload File (PDF, DOCX, etc.)</label>
+                            <input type="file" id="templateFile" accept=".pdf,.doc,.docx,.ppt,.pptx">
+                        </div>
+                        <div class="form-group">
+                            <label for="templateLink">Or Link to Resource</label>
+                            <input type="url" id="templateLink" placeholder="https://example.com">
+                        </div>
+                        <button type="submit" class="add-btn">
+                            <i class="fas fa-plus"></i> Submit Template
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="collabConfirmModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="collabModalTitle">Send Collaboration Request</h2>
+            <span class="close-modal" id="closeCollabConfirmModal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="collabModalContent">
+                <div class="confirm-content">
+                    <div class="icon-container">
+                        <i class="fas fa-handshake" style="font-size: 3em; color: #007bff; margin-bottom: 1rem;"></i>
+                    </div>
+                    <p id="collabConfirmText">Are you sure you want to send a collaboration request to <strong id="targetClubName">this club</strong>?</p>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelCollabRequest">Cancel</button>
+                        <button class="btn-primary" id="confirmCollabRequest">
+                            <i class="fas fa-paper-plane"></i> Send Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="collab.js"></script>
+</body>
+</html>

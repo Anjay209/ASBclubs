@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anjay's Community - Courses</title>
+    <link rel="stylesheet" href="clubs.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-circle">HHS</div>
+            </div>
+            
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="clubs.html" class="nav-item">Clubs</a>
+            <a href="events.html" class="nav-item">Events</a>
+            <a href="analytics.html" class="nav-item">Dashboard</a>
+        </nav>
+        
+        <div class="header-right">
+            
+           <button class="icon-btn" onclick="window.location.href='index.html?openNotifications=true'">
+    <svg width="18" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+        <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="2"/>
+    </svg>
+</button>
+           
+           
+         
+        </div>
+    </header>
+    <!-- Sidebar -->
+    
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Top Navigation -->
+      <aside class="thin-sidebar">
+    <!-- Keep existing buttons -->
+    
+    <!-- Add user clubs section -->
+    <div class="user-clubs-mini" id="userClubsMini">
+        <!-- Clubs will be dynamically inserted here -->
+    </div>
+    
+    <!-- Keep create button -->
+    <a href="create.html"><button class="thin-sidebar-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+    </button></a>
+</aside>
+
+        <!-- Page Content -->
+        <div class="page-content">
+        <div class="page-header">
+            <h1>Clubs</h1>
+            <div class="header-actions">
+                <button class="create-btn" id="createClubBtn" style="display:none;">Create a club</button>
+                <div class="more-options">
+                    <!-- Keep your options SVG -->
+                </div>
+            </div>
+        </div>
+
+        <div class="course-filters">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Clubs</button>
+                <button class="filter-tab" data-filter="yours">Your Clubs</button>
+            </div>
+        </div>
+
+        <div class="courses-grid" id="clubsContainer">
+            <!-- Clubs will be dynamically inserted here -->
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Loading clubs...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget -->
+   
+
+    <!-- Add this modal structure right before the closing </body> tag -->
+<div class="club-modal" id="clubModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Club Name</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Tab Navigation -->
+            <div class="modal-tabs">
+                <button class="modal-tab active" data-tab="overview">Overview</button>
+                <button class="modal-tab" data-tab="members">Members</button>
+                <button class="modal-tab" data-tab="events">Events</button>
+                <button class="modal-tab" data-tab="documents">Documents</button>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="tab-content active" id="overview">
+                <div class="club-description">
+                    <p>Detailed description of the club's purpose and activities.</p>
+                </div>
+                
+                <div class="club-stats">
+                    <div class="stat-card">
+                        <h3>Members</h3>
+                        <p>24</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Upcoming Events</h3>
+                        <p>3</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Since</h3>
+                        <p>Jan 2023</p>
+                    </div>
+                </div>
+                
+                <div class="ai-recommendations" style="display: none;">
+                    <h3>AI-Powered Insights</h3>
+                    <div class="recommendation-card">
+                        <p>"You might enjoy Social Committee based on your event attendance"</p>
+                    </div>
+                    <div class="recommendation-card">
+                        <p>"Your communication skills suggest you're ready for VP role"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="members">
+                
+                <div class="member-directory">
+                    <!-- Member cards would be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="events">
+                <div class="event-calendar">
+                    <!-- Calendar and events would be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="documents">
+                <div class="document-library">
+                    <!-- Documents would be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <a class="join-button">Join Club</a>
+            <button class="secondary-button" style="display: none;">Contact Organizer</button>
+        </div>
+    </div>
+</div>
+    <script src="clubs.js"></script>
+</body>
+</html>

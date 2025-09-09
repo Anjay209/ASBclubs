@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anjay's Community</title>
+    <link rel="stylesheet" href="analytics.css">
+
+     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+   <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-circle">HHS</div>
+            </div>
+            
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="clubs.html" class="nav-item">Clubs</a>
+            <a href="events.html" class="nav-item">Events</a>
+            <a href="analytics.html" class="nav-item">Dashboard</a>
+        </nav>
+        
+        <div class="header-right">
+            
+           <button class="icon-btn" onclick="window.location.href='index.html?openNotifications=true'">
+    <svg width="18" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+        <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="2"/>
+    </svg>
+</button>
+           
+           
+         
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Thin Left Sidebar -->
+        <aside class="thin-sidebar">
+    <!-- Keep existing buttons -->
+    
+    <!-- Add user clubs section -->
+    <div class="user-clubs-mini" id="userClubsMini">
+        <!-- Clubs will be dynamically inserted here -->
+    </div>
+    
+    <!-- Keep create button -->
+    <a href="create.html"><button class="thin-sidebar-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+    </button></a>
+</aside>
+
+        <!-- Main Sidebar -->
+             <header class="gamify-header">
+    <div class="club-selector-container">
+        <select id="clubSelector" class="club-dropdown">
+            <option value="">Loading clubs...</option>
+        </select>
+        <svg class="dropdown-icon" width="12" height="8" viewBox="0 0 12 8" fill="none">
+            <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+</header>
+
+        
+
+       
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>Club Operations Dashboard</h1>
+                <div class="header-stats">
+                    <span class="status-badge draft">Status: Active</span>
+                    <span class="divider">|</span>
+                    <span class="club-type">Club type: Student Organization</span>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Quick Stats Row -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-icon purple">👥</div>
+                <div class="stat-content">
+                    <h3>Active Members</h3>
+                    <span class="stat-number">127</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">📈</div>
+                <div class="stat-content">
+                    <h3>Health Score</h3>
+                    <span class="stat-number">85%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">📅</div>
+                <div class="stat-content">
+                    <h3>Upcoming Events</h3>
+                    <span class="stat-number">5</span>
+                </div>
+            </div>
+           
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-grid">
+            <!-- Member Analytics -->
+            <div class="dashboard-card large">
+                <div class="card-header">
+                    <h3>Member Analytics</h3>
+                    <div class="header-actions">
+   
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="analytics-grid">
+                        <div class="metric">
+                            <span class="metric-label">Engagement Level</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 78%"></div>
+                            </div>
+                            <span class="metric-value">78%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Attendance Rate</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill orange-fill" style="width: 65%"></div>
+                            </div>
+                            <span class="metric-value">65%</span>
+                        </div>
+                        
+                    </div>
+                    <canvas id="engagementChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Event Performance -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Event Performance</h3>
+                    <div class="performance-indicator green">↗ +12%</div>
+                </div>
+                <div class="card-content">
+                    <div class="event-stats">
+                        <div class="event-metric">
+                            <span class="event-label">Last Event Attendance</span>
+                            <span class="event-value">89 / 100</span>
+                        </div>
+                        <div class="event-metric">
+                            <span class="event-label">Feedback Score</span>
+                            <div class="stars">★★★★☆</div>
+                            <span class="event-value">4.2/5</span>
+                        </div>
+                       
+                    </div>
+                    <div class="improvement-suggestions">
+                        <h4>Improvement Suggestions</h4>
+                        <ul>
+                            <li>Consider shorter duration events</li>
+                            <li>Add more interactive elements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Control Center -->
+        <div class="dashboard-card" id="budgetControlCenter" style="width: 35vw;">
+    <div class="card-header">
+        <h3>Budget Control Center</h3>
+
+    </div>
+    <div class="card-content">
+        <!-- Dynamic Checklist Section -->
+        <div class="checklist-section">
+            <h4>Club Checklist</h4>
+            <div class="checklist-input">
+                <input type="text" id="checklistItemInput" placeholder="Add new checklist item...">
+                <button class="action-btn small" id="addChecklistItem">Add</button>
+            </div>
+            <div class="checklist-items" id="checklistItemsContainer">
+                <!-- Checklist items loaded dynamically from Firebase -->
+            </div>
+        </div>
+        
+        <!-- Dynamic Approvals Section -->
+        <div class="pending-approvals" id="approvalsContainer">
+            <!-- Approval items loaded dynamically from Firebase -->
+        </div>
+    </div>
+</div>
+
+
+            <!-- Compliance Monitor -->
+         
+
+            <!-- AI Event Optimizer -->
+          
+
+            <!-- Member Feedback System -->
+            <div class="dashboard-card" style="width: 41vw; margin-left: 155px;">
+                <div class="card-header">
+                    <h3>Member Feedback System</h3>
+                </div>
+                <div class="card-content">
+                    <div class="sentiment-analysis">
+                        <h4>Overall Sentiment</h4>
+                        <div class="sentiment-score positive">
+                            <span class="sentiment-emoji">😊</span>
+                            <span class="sentiment-value">Positive (87%)</span>
+                        </div>
+                    </div>
+                    <div class="recent-feedback">
+                        <h4>Recent Feedback</h4>
+                        <div class="feedback-item">
+                            <span class="feedback-text">"Love the new meeting format!"</span>
+                            <span class="feedback-sentiment positive">Positive</span>
+                        </div>
+                        <div class="feedback-item">
+                            <span class="feedback-text">"Could use more social events"</span>
+                            <span class="feedback-sentiment neutral">Neutral</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        
+
+            <!-- Alumni Network -->
+         
+
+          
+        </div>
+    </div>
+    <script src="analytics.js"></script>
+</body>
+</html>

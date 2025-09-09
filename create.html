@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Club</title>
+    <link rel="stylesheet" href="create.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+
+<!-- Firebase Authentication -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+<!-- Firebase Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="create.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <div class="logo-circle">CQ</div>
+            </div>
+            
+            <h1>Now let's create your club</h1>
+            <p class="subtitle">Don't worry — you can always change this information later</p>
+            
+            <div id="initial-buttons" class="button-container">
+                <button id="join-club-btn" class="action-button">Join a Club</button>
+                <button id="create-club-btn" class="action-button">Create your Club</button>
+            </div>
+            
+            <div id="join-form" class="form-container hidden">
+                <label for="join-input">Enter club name to join</label>
+                <div class="input-container">
+                    <input type="text" id="join-input" placeholder="Enter club name">
+                </div>
+                <div id="officer-question" class="officer-question hidden">
+        <p>Are you an officer in this club?</p>
+        <div class="officer-buttons">
+            <button id="officer-yes-inline" class="officer-btn yes">Yes</button>
+            <button id="officer-no-inline" class="officer-btn no">No</button>
+        </div>
+    </div>
+                <div class="form-actions">
+                    <button id="back-from-join" class="back-button">Back</button>
+                    <button id="join-submit" class="next-button">Join</button>
+                </div>
+            </div>
+            
+            <div id="create-form" class="form-container hidden">
+                <label for="create-input">Enter club name</label>
+                <div class="input-container">
+                    <input type="text" id="create-input" placeholder="Enter club name">
+                </div>
+                <div class="form-actions">
+                    <button id="back-from-create" class="back-button">Back</button>
+                    <button id="create-submit" class="next-button">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this inside your card div, after the join-form and create-form -->
+<div id="officer-confirm" class="form-container hidden">
+    <h3>Are you an officer of this club?</h3>
+    <div class="officer-options">
+        <button id="officer-yes" class="officer-button">Yes</button>
+        <button id="officer-no" class="officer-button">No</button>
+    </div>
+    <div class="form-actions">
+        <button id="back-from-officer" class="back-button">Back</button>
+    </div>
+</div>
+    
+ 
+</body>
+</html>

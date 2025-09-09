@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anjay's Community</title>
+    <link rel="stylesheet" href="style.css">
+     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-circle">HHS</div>
+            </div>
+            
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="clubs.html" class="nav-item">Clubs</a>
+            <a href="events.html" class="nav-item">Events</a>
+            <a href="analytics.html" class="nav-item">Dashboard</a>
+        </nav>
+        
+        <div class="header-right">
+            
+            <button class="icon-btn">
+                <svg width="18" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+                    <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+           
+           
+         
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Thin Left Sidebar -->
+      <aside class="thin-sidebar">
+    <!-- Keep existing buttons -->
+    
+    <!-- Add user clubs section -->
+    <div class="user-clubs-mini" id="userClubsMini">
+        <!-- Clubs will be dynamically inserted here -->
+    </div>
+    
+    <!-- Keep create button -->
+    <a href="create.html"><button class="thin-sidebar-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+            <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+    </button></a>
+</aside>
+
+        <!-- Main Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-item selected">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span><a href="training.html" class="go">JumpStart</a></span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Collaborate</h3>
+                <button class="create-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+                        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span><a href="collab.html" class="span">Add a partnership</a></span>
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Links</h3>
+                <div class="link-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <line x1="7" y1="17" x2="17" y2="7" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="7,7 17,7 17,17" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span><a class="span" href="https://app.informedk12.com/link_campaigns/hhs-club-reflections-form?token=AdMLJvtG4XRkpz21JnTkMfv4">CQR Form</a></span>
+                </div>
+                <div class="link-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <line x1="7" y1="17" x2="17" y2="7" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="7,7 17,7 17,17" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Join Student Council</span>
+                </div>
+                <button class="create-btn">
+                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <line x1="7" y1="17" x2="17" y2="7" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="7,7 17,7 17,17" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Get Featured</span>
+                </button>
+            </div>
+
+            <div class="go-live-container" style="color: white;">
+                <button class="go-live-btn" style="color: white;">
+                    
+                    <span>Post a Survey</span>
+                </button>
+            </div>
+
+            <div class="powered-by">
+                <span>Homestead ASB Clubs 2025-26</span>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1>New Clubs</h1>
+                <div class="content-controls">
+                </div>
+            </div>
+
+            <div class="feed-grid-layout">
+                <!-- Row 1: Full width card -->
+                <div class="feed-card feed-card-wide feed-card-gray-bg">
+                    <h2 class="feed-card-title-lg">Featured Clubs</h2>
+                    <p class="feed-card-description">These are clubs that members have found tight-knit communities in.</p>
+                    <div class="feed-card-button-group">
+                        <button class="feed-button-primary"> <a href="clubs.html" class="go"> See All Clubs </a></button>
+                    </div>
+                </div>
+
+                <!-- Row 2: Two half-width cards -->
+               <div id="clubs-container"></div>
+            </div>
+            
+            <div class="content-header">
+                <h1>Upcoming</h1>
+            </div>
+            
+            <div class="feed-grid-layout">
+                <!-- Row 3: Full width checklist -->
+               <div class="feed-card feed-card-wide">
+  <h3 class="feed-card-title-sm">Upcoming Events</h3>
+  <p class="feed-card-progress">0 upcoming events</p>
+  <ul class="feed-checklist-items">
+    <!-- Events will appear here -->
+  </ul>
+</div>
+            </div>
+            
+        
+            
+            
+        </main>
+    </div>
+
+    <!-- Add this to your index.html -->
+<div id="notificationArea"></div>
+
+
+   
+
+
+  <div id="surveyModal" class="survey-modal">
+    <div class="survey-modal-content">
+        <div class="survey-modal-header">
+            <div>
+                <h2 id="surveyEventTitle">Event Feedback</h2>
+                <p id="surveyEventDetails" class="text-gray-600"></p>
+            </div>
+            <button class="close-survey-modal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="survey-form">
+            <div class="survey-question">
+                <label>How much did you enjoy this event? (1-10)</label>
+                <input type="range" min="1" max="10" value="5" data-question="enjoyment" class="survey-slider">
+                <div class="slider-labels">
+                    <span>Not at all</span>
+                    <span class="slider-value">5</span>
+                    <span>Extremely</span>
+                </div>
+            </div>
+
+            <div class="survey-question">
+                <label>How engaging was the content? (1-10)</label>
+                <input type="range" min="1" max="10" value="5" data-question="engagement" class="survey-slider">
+                <div class="slider-labels">
+                    <span>Boring</span>
+                    <span class="slider-value">5</span>
+                    <span>Very engaging</span>
+                </div>
+            </div>
+
+            <div class="survey-question">
+                <label>How likely are you to attend future events? (1-10)</label>
+                <input type="range" min="1" max="10" value="5" data-question="likelyToReturn" class="survey-slider">
+                <div class="slider-labels">
+                    <span>Never</span>
+                    <span class="slider-value">5</span>
+                    <span>Definitely</span>
+                </div>
+            </div>
+
+            <div class="survey-question">
+                <label>How well was the event organized? (1-10)</label>
+                <input type="range" min="1" max="10" value="5" data-question="organization" class="survey-slider">
+                <div class="slider-labels">
+                    <span>Poorly</span>
+                    <span class="slider-value">5</span>
+                    <span>Excellently</span>
+                </div>
+            </div>
+
+            <div class="survey-question">
+                <label>Additional Comments (Optional)</label>
+                <textarea id="surveyComments" placeholder="Share your thoughts about the event..." rows="4"></textarea>
+            </div>
+        </div>
+
+        <div class="survey-modal-actions">
+            <button class="btn btn-secondary close-survey-modal">Cancel</button>
+            <button class="btn btn-primary" id="submitSurvey">Submit Feedback</button>
+        </div>
+    </div>
+</div>
+
+<!-- Survey Notification Banner -->
+<div id="surveyBanner" class="survey-notification-banner" style="display: none;">
+    <div class="survey-banner-content">
+        <i class="fas fa-clipboard-list"></i>
+        <span id="surveyBannerText">You have pending surveys to complete</span>
+        <button id="viewSurveysBtn" class="btn btn-small btn-primary">View Surveys</button>
+        <button id="dismissBannerBtn" class="btn btn-small btn-secondary">&times;</button>
+    </div>
+</div>
+
+    <!-- Survey Modal -->
+
+    <div id="surveyCreationModal" class="survey-creation-modal" style="display: none;">
+  <div class="survey-creation-content">
+    <div class="survey-creation-header">
+      <h2>Create New Survey</h2>
+      <button class="close-survey-creation">&times;</button>
+    </div>
+    
+    <div class="survey-creation-body">
+      <div class="survey-meta">
+        <div class="form-group">
+          <label>Survey Title</label>
+          <input type="text" id="surveyTitle" placeholder="Enter survey title">
+        </div>
+        
+        <div class="form-group">
+          <label>Description (Optional)</label>
+          <textarea id="surveyDescription" placeholder="What is this survey about?"></textarea>
+        </div>
+      </div>
+      
+      <div class="survey-questions" id="surveyQuestionsContainer">
+        <!-- Questions will be added here dynamically -->
+      </div>
+      
+      <button class="add-question-btn" id="addQuestionBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/>
+          <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Add Question
+      </button>
+    </div>
+    
+    <div class="survey-creation-footer">
+      <button class="btn-secondary" id="cancelSurvey">Cancel</button>
+      <button class="btn-primary" id="publishSurvey">Publish Survey</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question Type Template (hidden) -->
+<div id="questionTemplate" style="display: none;">
+  <div class="survey-question">
+    <div class="question-header">
+      <input type="text" class="question-text" placeholder="Enter your question">
+      <select class="question-type">
+        <option value="multiple-choice">Multiple Choice</option>
+        <option value="text">Text Response</option>
+        <option value="scale">Scale (1-5)</option>
+        <option value="checkbox">Checkboxes</option>
+        <option value="dropdown">Dropdown</option>
+      </select>
+      <button class="remove-question">&times;</button>
+    </div>
+    
+    <div class="question-options">
+      <!-- Options will be added here based on type -->
+    </div>
+  </div>
+</div>
+
+
+<div class="notif-dropdown" id="notifDropdown" style="display: none; position: absolute; right: 20px; top: 60px; width: 350px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000;">
+  <div class="notif-dropdown-header">
+    <h3 class="notif-dropdown-title">Notifications</h3>
+  </div>
+  
+  <div class="notif-tabs">
+    <button class="notif-tab active">All</button>
+  </div>
+  
+  <div class="notif-content">
+    
+    
+   
+  </div>
+</div>
+
+<div class="student-council-modal-overlay" id="studentCouncilModal" style="display: none;">
+  <div class="student-council-modal-container">
+    <div class="student-council-modal-header">
+      <h2 class="student-council-modal-title">Join Student Council</h2>
+      <button class="student-council-modal-close" id="closeStudentCouncilModal">&times;</button>
+    </div>
+    
+    <form id="studentCouncilForm" action="https://formspree.io/f/movlrkbn" method="POST">
+      <div class="student-council-modal-body">
+        <div class="student-council-input-group">
+          <label class="student-council-input-label">To:</label>
+          <input type="text" class="student-council-input-field" value="hhsasbvp@gmail.com" readonly>
+          <input type="hidden" name="_replyto" value="Club Request"> <!-- Will be filled by JS -->
+        </div>
+        
+        <div class="student-council-input-group">
+          <label class="student-council-input-label">Your Message:</label>
+          <textarea class="student-council-textarea" name="message" placeholder="Write your application message here..."></textarea>
+        </div>
+        
+        <input type="hidden" name="_subject" value="New Student Council Application">
+      </div>
+      
+      <div class="student-council-modal-footer">
+        <button type="button" class="student-council-btn student-council-btn-secondary" id="cancelStudentCouncil">Cancel</button>
+        <button type="submit" class="student-council-btn student-council-btn-primary" id="sendStudentCouncil">Send Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="featured-modal-overlay" id="featuredModal" style="display: none;">
+  <div class="featured-modal-container">
+    <div class="featured-modal-header">
+      <h2 class="featured-modal-title">Get Your Club Featured</h2>
+      <button class="featured-modal-close" id="closeFeaturedModal">&times;</button>
+    </div>
+    
+    <div class="featured-modal-body">
+      <div class="featured-input-group">
+        <label class="featured-input-label">Club Name:</label>
+        <input type="text" class="featured-input-field" placeholder="Enter your club name">
+      </div>
+      
+      <div class="featured-input-group">
+        <label class="featured-input-label">Why should your club be featured?</label>
+        <textarea class="featured-textarea" placeholder="Tell us about your club's unique activities and achievements..."></textarea>
+      </div>
+      
+      <div class="featured-checkbox-group">
+        <input type="checkbox" id="featured-agree" class="featured-checkbox">
+        <label for="featured-agree" class="featured-checkbox-label">I want my club to be featured on the community homepage</label>
+      </div>
+    </div>
+    
+    <div class="featured-modal-footer">
+      <button class="featured-btn featured-btn-secondary" id="cancelFeatured">Cancel</button>
+      <button class="featured-btn featured-btn-primary" id="submitFeatured">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<div class="content-modal-overlay" id="clubUpdatesModal" style="display: none;">
+  <div class="content-modal-container">
+    <div class="content-modal-header">
+      <h2 class="content-modal-title">Your Club Updates</h2>
+      <button class="content-modal-close">&times;</button>
+    </div>
+    
+    <div class="content-modal-body">
+      <div class="content-modal-section">
+        <h3 class="content-modal-subtitle">Recent Activity</h3>
+        <div class="content-modal-empty">
+          <p>No new updates from your clubs</p>
+          <p>Updates will appear here when clubs post announcements</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recommended Clubs Modal -->
+<div class="content-modal-overlay" id="recommendedClubsModal" style="display: none;">
+  <div class="content-modal-container">
+    <div class="content-modal-header">
+      <h2 class="content-modal-title">Recommended Clubs</h2>
+      <button class="content-modal-close">&times;</button>
+    </div>
+    
+    <div class="content-modal-body">
+      <div class="content-modal-section">
+        <h3 class="content-modal-subtitle">Based on your interests</h3>
+        <div class="content-modal-empty">
+          <p>No recommendations available yet</p>
+          <p>Join more clubs to get better recommendations</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Member Spotlights Modal -->
+<div class="content-modal-overlay" id="memberSpotlightsModal" style="display: none;">
+  <div class="content-modal-container">
+    <div class="content-modal-header">
+      <h2 class="content-modal-title">Member Spotlights</h2>
+      <button class="content-modal-close">&times;</button>
+    </div>
+    
+    <div class="content-modal-body">
+      <div class="content-modal-section">
+        <h3 class="content-modal-subtitle">Community Highlights</h3>
+        <div class="content-modal-empty">
+          <p>No members featured this week</p>
+          <p>Check back later to see outstanding community members</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script src="index.js"></script>
+</body>
+</html>
