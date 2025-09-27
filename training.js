@@ -962,3 +962,12 @@ function getCardType(card) {
   if (title.includes('Legacy')) return 'legacy';
   return '';
 }
+
+
+// Listen for auth state changes (you might already have this)
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        // User is signed out, redirect to login
+        window.location.href = 'login.html';
+    }
+});

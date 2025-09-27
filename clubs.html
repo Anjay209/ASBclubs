@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anjay's Community - Courses</title>
+    <title></title>
     <link rel="stylesheet" href="clubs.css">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
 
@@ -25,6 +25,7 @@
             <a href="clubs.html" class="nav-item">Clubs</a>
             <a href="events.html" class="nav-item">Events</a>
             <a href="analytics.html" class="nav-item">Dashboard</a>
+              <button id="signOutBtn" onclick="firebase.auth().signOut()">Sign Out</button>
         </nav>
         
         <div class="header-right">
@@ -108,7 +109,7 @@
                 <button class="modal-tab active" data-tab="overview">Overview</button>
                 <button class="modal-tab" data-tab="members">Members</button>
                 <button class="modal-tab" data-tab="events">Events</button>
-                <button class="modal-tab" data-tab="documents">Documents</button>
+        
             </div>
             
             <!-- Tab Content -->

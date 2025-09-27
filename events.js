@@ -344,10 +344,9 @@ window.debugUserClubs = debugUserClubs;
             console.log('Loading events from Firebase...');
             
             // Load events created by user or events they're attending
-            const eventsSnapshot = await db.collection('events')
-                .where('attendees', 'array-contains', currentUser.uid)
-                .orderBy('date', 'asc')
-                .get();
+           const eventsSnapshot = await db.collection('events')
+    .orderBy('date', 'asc')
+    .get();
             
             events = [];
             eventsSnapshot.forEach(doc => {
@@ -1483,10 +1482,54 @@ function showEventModal(event) {
         console.error('❌ Event modal not found in DOM');
         return;
     }
-    
-    // Store the current event globally
-    currentModalEvent = event;
+
+    if (currentUser && event.createdBy === currentUser.uid) {
+        // Remove existing delete button first
+        const existingDelete = eventModal.querySelector('.modal-delete-btn');
+        if (existingDelete) existingDelete.remove();
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'modal-delete-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        `;
+        
+        deleteBtn.onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this event?')) {
+                const success = await deleteEventFromFirebase(event.firebaseId);
+                if (success) {
+                    eventModal.style.display = 'none';
+                    loadEventsFromFirebase(); // Refresh calendar
+                }
+            }
+        };
+        
+        eventModal.appendChild(deleteBtn);
+    }
+       currentModalEvent = event;
     console.log('📝 Set currentModalEvent:', currentModalEvent);
+    
+    // Populate modal fields
+
+
+
     
     // Populate modal fields
     const modalEventTitle = document.getElementById('modalEventTitle');
@@ -1539,6 +1582,8 @@ function showEventModal(event) {
     eventModal.style.display = 'flex';
     console.log('✅ Modal displayed');
 }
+
+
 
 // SOLUTION 2: Create a dedicated RSVP button setup function
 function setupRSVPButtonForEvent(event) {
@@ -1675,21 +1720,33 @@ function setupRSVPButtonForEvent(event) {
         ];
         return colors[Math.floor(Math.random() * colors.length)];
     }
-    
+    // Listen for auth state changes (you might already have this)
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        // User is signed out, redirect to login
+        window.location.href = 'login.html';
+    }
+});
+
    function renderEvents() {
     // Clear all existing event blocks
-    document.querySelectorAll('.event-block').forEach(el => el.remove());
+       document.querySelectorAll('.event-block').forEach(el => el.remove());
     
-    // Sort events by time
+    // Sort events by time with null checks
     events.sort((a, b) => {
-        if (a.date === b.date) {
-            return a.startTime.localeCompare(b.startTime);
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        
+        if (dateA === dateB) {
+            const startTimeA = a.startTime || '';
+            const startTimeB = b.startTime || '';
+            return startTimeA.localeCompare(startTimeB);
         }
-        return a.date.localeCompare(b.date);
+        return dateA.localeCompare(dateB);
     });
     
     // Add event blocks for each event
-    events.forEach(event => {
+   events.forEach(event => {
         const dayElement = document.querySelector(`.calendar-day[data-date="${event.date}"]`);
         if (dayElement) {
             const eventBlock = document.createElement('div');
@@ -1702,6 +1759,25 @@ function setupRSVPButtonForEvent(event) {
                 <div class="event-title">${event.title}</div>
                 <div class="event-club">${event.clubName || ''}</div>
             `;
+
+            if (currentUser && event.createdBy === currentUser.uid) {
+                const deleteIcon = document.createElement('span');
+                deleteIcon.textContent = ' ×';
+                deleteIcon.style.cursor = 'pointer';
+                deleteIcon.style.color = 'red';
+                deleteIcon.title = 'Delete event';
+                
+                deleteIcon.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this event?')) {
+                        await deleteEventFromFirebase(event.firebaseId);
+                        loadEventsFromFirebase(); // Refresh calendar
+                    }
+                };
+                
+                // Add delete icon to event title
+                eventBlock.querySelector('.event-title').appendChild(deleteIcon);
+            }
             
             eventBlock.style.backgroundColor = event.color;
             eventBlock.addEventListener('click', function(e) {

@@ -394,9 +394,9 @@ updateActiveSince(club);
             
             // Set up join button
             const isMember = currentUser && club.members && club.members.includes(currentUser.uid);
-            joinBtn.textContent = isMember ? 'Already a Member' : 'Join Club';
-            joinBtn.classList.toggle('joined', isMember);
-            joinBtn.onclick = isMember ? null : () => joinClub(club.id);
+joinBtn.textContent = isMember ? 'Leave Club' : 'Join Club';
+joinBtn.classList.toggle('joined', isMember);
+joinBtn.onclick = isMember ? () => leaveClub(club.id) : () => joinClub(club.id);
             
             // Show modal
             modal.classList.add('active');
@@ -524,6 +524,43 @@ updateActiveSince(club);
                 </div>
             `;
         });
+}
+// Listen for auth state changes (you might already have this)
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        // User is signed out, redirect to login
+        window.location.href = 'login.html';
+    }
+});
+
+async function leaveClub(clubId) {
+    if (!currentUser) return;
+    
+    try {
+        // Remove user from club's members array
+        await db.collection('clubs').doc(clubId).update({
+            members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+            memberCount: firebase.firestore.FieldValue.increment(-1)
+        });
+        
+        // Remove club from user's clubs array
+        await db.collection('users').doc(currentUser.uid).update({
+            clubs: firebase.firestore.FieldValue.arrayRemove(clubId)
+        });
+        
+        console.log('Successfully left club');
+        
+        // Refresh the modal or close it
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        
+        // Optionally refresh the clubs page
+        location.reload();
+        
+    } catch (error) {
+        console.error('Error leaving club:', error);
+        alert('Error leaving club. Please try again.');
+    }
 }
 
         // Load events for a club
