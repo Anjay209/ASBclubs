@@ -392,11 +392,22 @@ updateActiveSince(club);
             // Load events
             loadClubEvents(club.id, eventsTab);
             
-            // Set up join button
-            const isMember = currentUser && club.members && club.members.includes(currentUser.uid);
-joinBtn.textContent = isMember ? 'Leave Club' : 'Join Club';
-joinBtn.classList.toggle('joined', isMember);
-joinBtn.onclick = isMember ? () => leaveClub(club.id) : () => joinClub(club.id);
+           // Set up join button
+const isMember = currentUser && club.members && club.members.includes(currentUser.uid);
+const isOfficer = currentUser && club.officers && club.officers.includes(currentUser.uid);
+
+if (isMember || isOfficer) {
+    joinBtn.textContent = 'Leave Club';
+    joinBtn.classList.add('joined');
+    joinBtn.onclick = () => leaveClub(club.id);
+} else {
+    joinBtn.textContent = 'Join Club';
+    joinBtn.classList.remove('joined');
+    
+    // Remove existing onclick and add new one with role selection
+    joinBtn.onclick = null;
+    joinBtn.onclick = () => showRoleSelection(club.id);
+}
             
             // Show modal
             modal.classList.add('active');
@@ -537,29 +548,47 @@ async function leaveClub(clubId) {
     if (!currentUser) return;
     
     try {
-        // Remove user from club's members array
-        await db.collection('clubs').doc(clubId).update({
+        const clubRef = db.collection('clubs').doc(clubId);
+        const userRef = db.collection('users').doc(currentUser.uid);
+        
+        const batch = db.batch();
+        
+        // Remove from all possible roles in club
+        batch.update(clubRef, {
             members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+            officers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
             memberCount: firebase.firestore.FieldValue.increment(-1)
         });
         
-        // Remove club from user's clubs array
-        await db.collection('users').doc(currentUser.uid).update({
-            clubs: firebase.firestore.FieldValue.arrayRemove(clubId)
+        // Remove from all user arrays
+        batch.update(userRef, {
+            clubs: firebase.firestore.FieldValue.arrayRemove(clubId),
+            officerClubs: firebase.firestore.FieldValue.arrayRemove(clubId)
         });
         
+        await batch.commit();
         console.log('Successfully left club');
         
-        // Refresh the modal or close it
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
-        
-        // Optionally refresh the clubs page
         location.reload();
         
     } catch (error) {
         console.error('Error leaving club:', error);
         alert('Error leaving club. Please try again.');
+    }
+}
+
+// Show role selection when joining club
+function showRoleSelection(clubId) {
+    const selectedRole = prompt('Are you joining as:\n\n1. Member (regular member)\n2. Officer (club leadership)\n\nEnter "1" for Member or "2" for Officer:');
+    
+    if (selectedRole === '1') {
+        joinClub(clubId, 'member');
+    } else if (selectedRole === '2') {
+        joinClub(clubId, 'officer');
+    } else if (selectedRole !== null) {
+        alert('Please enter either "1" for Member or "2" for Officer');
     }
 }
 
@@ -768,85 +797,87 @@ async function updateUpcomingEventsCount(clubId) {
 }
 
         // Join a club - improved version with better error handling
-        async function joinClub(clubId) {
-            console.log("Attempting to join club:", clubId);
-            console.log("Current user UID:", currentUser.uid);
+        async function joinClub(clubId, role = 'member') {
+    console.log("Attempting to join club as:", role);
+    console.log("Current user UID:", currentUser.uid);
 
-            const clubRef = db.collection('clubs').doc(clubId);
-            const userRef = db.collection('users').doc(currentUser.uid);
-            
-            // Show loading state
-            const joinBtn = modal.querySelector('.join-button');
-            if (joinBtn) {
-                joinBtn.disabled = true;
-                joinBtn.textContent = 'Joining...';
-            }
+    const clubRef = db.collection('clubs').doc(clubId);
+    const userRef = db.collection('users').doc(currentUser.uid);
+    
+    // Show loading state
+    const joinBtn = modal.querySelector('.join-button');
+    if (joinBtn) {
+        joinBtn.disabled = true;
+        joinBtn.textContent = 'Joining...';
+    }
 
-            try {
-                // First check if user is already a member
-                const clubDoc = await clubRef.get();
-                if (!clubDoc.exists) {
-                    throw new Error("Club not found");
-                }
-                
-                const clubData = clubDoc.data();
-                if (clubData.members && clubData.members.includes(currentUser.uid)) {
-                    throw new Error("You're already a member of this club");
-                }
-
-                // Use batched write for atomic updates
-                const batch = db.batch();
-                
-                // Add user to club members
-                batch.update(clubRef, {
-                    members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-                    memberCount: firebase.firestore.FieldValue.increment(1)
-                });
-                
-                // Add club to user's clubs list
-                batch.update(userRef, {
-                    clubs: firebase.firestore.FieldValue.arrayUnion(clubId)
-                });
-                
-                // Commit the batch
-                await batch.commit();
-                
-                console.log("Successfully joined club");
-                
-                // UI Updates
-                if (joinBtn) {
-                    joinBtn.textContent = 'Already a Member';
-                    joinBtn.classList.add('joined');
-                    joinBtn.disabled = false;
-                    joinBtn.onclick = null;
-                }
-
-                // Success message
-                const successMsg = document.createElement('div');
-                successMsg.className = 'success-message';
-                successMsg.textContent = 'Successfully joined the club!';
-                const modalBody = modal.querySelector('.modal-body');
-                if (modalBody) {
-                    modalBody.prepend(successMsg);
-                    setTimeout(() => successMsg.remove(), 3000);
-                }
-
-                // Refresh data
-                loadClubs();
-                loadClubMembers(clubId, modal.querySelector('#members .member-directory'));
-            } catch (error) {
-                console.error("Error joining club:", error);
-                
-                // Reset join button
-                if (joinBtn) {
-                    joinBtn.textContent = 'Join Club';
-                    joinBtn.disabled = false;
-                }
-                
-                // Show error message
-                alert(error.message || 'There was an error joining the club. Please try again.');
-            }
+    try {
+        const clubDoc = await clubRef.get();
+        if (!clubDoc.exists) {
+            throw new Error("Club not found");
         }
+        
+        const clubData = clubDoc.data();
+        
+        // Check if user is already in any role
+        const isAlreadyMember = clubData.members && clubData.members.includes(currentUser.uid);
+        const isAlreadyOfficer = clubData.officers && clubData.officers.includes(currentUser.uid);
+        
+        if (isAlreadyMember || isAlreadyOfficer) {
+            throw new Error("You're already in this club");
+        }
+
+        const batch = db.batch();
+        
+        // Add to appropriate club array based on role
+        if (role === 'officer') {
+            batch.update(clubRef, {
+                officers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            
+            // Add to user's officerClubs
+            batch.update(userRef, {
+                officerClubs: firebase.firestore.FieldValue.arrayUnion(clubId)
+            });
+        } else {
+            // Default to member
+            batch.update(clubRef, {
+                members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+                memberCount: firebase.firestore.FieldValue.increment(1)
+            });
+            
+            // Add to user's clubs
+            batch.update(userRef, {
+                clubs: firebase.firestore.FieldValue.arrayUnion(clubId)
+            });
+        }
+        
+        await batch.commit();
+        console.log("Successfully joined club as:", role);
+        
+        // UI Updates
+        if (joinBtn) {
+            joinBtn.textContent = role === 'officer' ? 'Officer' : 'Member';
+            joinBtn.classList.add('joined');
+            joinBtn.disabled = false;
+            joinBtn.onclick = () => leaveClub(clubId);
+        }
+
+        // Refresh data
+        loadClubs();
+        loadClubMembers(clubId, modal.querySelector('#members .member-directory'));
+        
+    } catch (error) {
+        console.error("Error joining club:", error);
+        
+        if (joinBtn) {
+            joinBtn.textContent = 'Join Club';
+            joinBtn.disabled = false;
+        }
+        
+        alert(error.message || 'There was an error joining the club. Please try again.');
+    }
+}
 
         // Close modal
         function closeModal() {
