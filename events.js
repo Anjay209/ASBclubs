@@ -236,6 +236,16 @@ async function saveEventToFirebase(eventData) {
         return null;
     }
     
+    // Check if we're editing an existing event
+    const createModal = document.getElementById('modalOverlay');
+    const editingEventId = createModal?.getAttribute('data-editing-event-id');
+    
+    if (editingEventId) {
+        // Update existing event
+        return await updateEventInFirebase(editingEventId, eventData);
+    }
+    
+    // Create new event (your existing logic)
     const clubDropdown = document.getElementById('clubDropdown');
     
     // Enhanced debugging for club selection
@@ -352,26 +362,28 @@ window.debugUserClubs = debugUserClubs;
             eventsSnapshot.forEach(doc => {
                 const eventData = doc.data();
                 const event = {
-                    id: doc.id,
-                    firebaseId: doc.id,
-                    title: eventData.title,
-                    date: eventData.date,
-                    startTime: eventData.startTime,
-                    endTime: eventData.endTime,
-                    formattedDate: eventData.formattedDate,
-                    formattedStart: eventData.formattedStart,
-                    formattedEnd: eventData.formattedEnd,
-                    space: eventData.space,
-                    topics: eventData.topics || [],
-                    location: eventData.location,
-                    paymentType: eventData.paymentType,
-                    repeat: eventData.repeat,
-                    color: eventData.color,
-                    createdBy: eventData.createdBy,
-                    attendees: eventData.attendees || [],
-                    attendeeCount: eventData.attendeeCount || 0,
-                    status: eventData.status || 'active'
-                };
+    id: doc.id,
+    firebaseId: doc.id,
+    title: eventData.title,
+    date: eventData.date,
+    startTime: eventData.startTime,
+    endTime: eventData.endTime,
+    formattedDate: eventData.formattedDate,
+    formattedStart: eventData.formattedStart,
+    formattedEnd: eventData.formattedEnd,
+    space: eventData.space,
+    topics: eventData.topics || [],
+    location: eventData.location,
+    paymentType: eventData.paymentType,
+    repeat: eventData.repeat,
+    color: eventData.color,
+    createdBy: eventData.createdBy,
+    clubId: eventData.clubId,           // ADD THIS
+    clubName: eventData.clubName,       // ADD THIS
+    attendees: eventData.attendees || [],
+    attendeeCount: eventData.attendeeCount || 0,
+    status: eventData.status || 'active'
+};
                 events.push(event);
             });
             
@@ -383,23 +395,7 @@ window.debugUserClubs = debugUserClubs;
         }
     }
     
-    async function updateEventInFirebase(eventId, updates) {
-        if (!currentUser) return false;
-        
-        try {
-            const updateData = {
-                ...updates,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            await db.collection('events').doc(eventId).update(updateData);
-            console.log('Event updated in Firebase');
-            return true;
-        } catch (error) {
-            console.error('Error updating event:', error);
-            return false;
-        }
-    }
+    
     
     async function deleteEventFromFirebase(eventId) {
         if (!currentUser) return false;
@@ -943,7 +939,7 @@ function setupClubDropdownOnly() {
     setupRepeatOptions();
     
     // Modal open/close
-  if (newEventBtn) {
+ if (newEventBtn) {
     newEventBtn.addEventListener('click', async function() {
         console.log('🎯 New event button clicked');
         console.log('👤 Current user:', currentUser ? currentUser.uid : 'null');
@@ -959,6 +955,30 @@ function setupClubDropdownOnly() {
         this.disabled = true;
         
         try {
+            // Check user permissions first
+            console.log('🔍 Checking user permissions...');
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            
+            if (!userDoc.exists) {
+                alert("User profile not found. Please contact support.");
+                return;
+            }
+            
+            const userData = userDoc.data();
+            const officerClubs = userData.officerClubs || [];
+            const ownedClubs = userData.ownedClubs || [];
+            
+            console.log('👤 Officer clubs:', officerClubs);
+            console.log('👤 Owned clubs:', ownedClubs);
+            
+            // Check if user has any officer or owner permissions
+            if (officerClubs.length === 0 && ownedClubs.length === 0) {
+                alert("You don't have permission to create events. You must be an officer or owner of a club to create events.");
+                return;
+            }
+            
+            console.log('✅ User has permissions to create events');
+            
             resetModal();
             
             // Set today's date as default
@@ -975,7 +995,7 @@ function setupClubDropdownOnly() {
             const clubDropdown = document.getElementById('clubDropdown');
             const dropdownText = clubDropdown.textContent.trim();
             
-            if (dropdownText.includes("No clubs available") || 
+            if (dropdownText.includes("No clubs available") ||
                 dropdownText.includes("User profile not found") ||
                 dropdownText.includes("Error loading clubs")) {
                 alert("You need to join a club before creating events. Please visit the clubs page to join a club.");
@@ -988,8 +1008,8 @@ function setupClubDropdownOnly() {
             }
             
         } catch (error) {
-            console.error("❌ Error loading clubs:", error);
-            alert("Failed to load your clubs. Please try again.");
+            console.error("❌ Error checking permissions or loading clubs:", error);
+            alert("Failed to load your permissions or clubs. Please try again.");
         } finally {
             // Reset button state
             this.textContent = originalText;
@@ -1474,6 +1494,7 @@ document.getElementById('surveyModal').addEventListener('click', function(e) {
 
 
 // SOLUTION 1: Fix the showEventModal function to properly set up RSVP button
+
 function showEventModal(event) {
     console.log('🔍 Showing event modal for:', event);
     
@@ -1484,52 +1505,104 @@ function showEventModal(event) {
     }
 
     if (currentUser && event.createdBy === currentUser.uid) {
-        // Remove existing delete button first
-        const existingDelete = eventModal.querySelector('.modal-delete-btn');
-        if (existingDelete) existingDelete.remove();
+        // Remove existing buttons first
+        const existingActionDelete = eventModal.querySelector('.delete-event-btn');
+        const existingEditBtn = eventModal.querySelector('.edit-event-btn');
+        if (existingActionDelete) existingActionDelete.remove();
+        if (existingEditBtn) existingEditBtn.remove();
         
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'modal-delete-btn';
-        deleteBtn.innerHTML = '×';
-        deleteBtn.style.cssText = `
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        `;
+        // Create Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'event-modal-btn edit-event-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.style.cssText = `
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+`;
+
         
-        deleteBtn.onclick = async (e) => {
+        editBtn.onmouseover = () => {
+            editBtn.style.background = 'linear-gradient(135deg, #2563eb, #1d4ed8)';
+            editBtn.style.transform = 'translateY(-1px)';
+            editBtn.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.4)';
+        };
+        
+        editBtn.onmouseout = () => {
+            editBtn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+            editBtn.style.transform = 'translateY(0)';
+            editBtn.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.3)';
+        };
+        
+        editBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm('Delete this event?')) {
+            eventModal.style.display = 'none';
+            openEditEventModal(event);
+        };
+        
+        // Create Delete button (your existing style)
+        const actionDeleteBtn = document.createElement('button');
+        actionDeleteBtn.className = 'event-modal-btn delete-event-btn';
+        actionDeleteBtn.textContent = 'Delete';
+        
+actionDeleteBtn.style.cssText = `
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+`;
+        
+        actionDeleteBtn.onmouseover = () => {
+            actionDeleteBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            actionDeleteBtn.style.transform = 'translateY(-1px)';
+            actionDeleteBtn.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.4)';
+        };
+        
+        actionDeleteBtn.onmouseout = () => {
+            actionDeleteBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            actionDeleteBtn.style.transform = 'translateY(0)';
+            actionDeleteBtn.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.3)';
+        };
+        
+        actionDeleteBtn.onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to delete this event?')) {
                 const success = await deleteEventFromFirebase(event.firebaseId);
                 if (success) {
                     eventModal.style.display = 'none';
-                    loadEventsFromFirebase(); // Refresh calendar
+                    loadEventsFromFirebase();
                 }
             }
         };
         
-        eventModal.appendChild(deleteBtn);
+        // Add both buttons to modal footer
+        const modalActions = eventModal.querySelector('.event-modal-actions') || 
+                           eventModal.querySelector('.event-modal-footer');
+        if (modalActions) {
+            modalActions.appendChild(editBtn);
+            modalActions.appendChild(actionDeleteBtn);
+        } else {
+            const modalFooter = document.createElement('div');
+            modalFooter.className = 'event-modal-footer';
+            modalFooter.appendChild(editBtn);
+            modalFooter.appendChild(actionDeleteBtn);
+            eventModal.appendChild(modalFooter);
+        }
     }
-       currentModalEvent = event;
+
+    currentModalEvent = event;
     console.log('📝 Set currentModalEvent:', currentModalEvent);
-    
-    // Populate modal fields
-
-
-
     
     // Populate modal fields
     const modalEventTitle = document.getElementById('modalEventTitle');
@@ -1546,7 +1619,7 @@ function showEventModal(event) {
         modalEventDateTime.textContent = dateTime;
     }
     if (modalEventLocation) modalEventLocation.textContent = event.location || event.space || 'Location not specified';
-    if (modalEventHost) modalEventHost.textContent = event.host || event.createdByEmail || 'Host not specified';
+    if (modalEventHost) modalEventHost.textContent = event.clubName || event.clubId || 'Host not specified';
     if (modalEventDescription) {
         let description = event.description || '';
         if (!description && event.topics && event.topics.length > 0) {
@@ -1554,7 +1627,6 @@ function showEventModal(event) {
         }
         if (!description) description = 'No description provided';
         
-        // Add attendee count to description
         const attendeeCount = event.attendees ? event.attendees.length : (event.attendeeCount || 0);
         const attendeeText = attendeeCount === 1 ? 'person attending' : 'people attending';
         description += `\n\n👥 ${attendeeCount} ${attendeeText}`;
@@ -1562,10 +1634,8 @@ function showEventModal(event) {
         modalEventDescription.textContent = description;
     }
     
-    // Handle RSVP button setup
     setupRSVPButtonForEvent(event);
     
-    // Handle survey button with updated attendee info
     const surveyBtn = eventModal.querySelector('.event-modal-btn.survey');
     if (surveyBtn) {
         if (currentUser && event.createdBy === currentUser.uid) {
@@ -1578,9 +1648,85 @@ function showEventModal(event) {
         }
     }
     
-    // Show modal
     eventModal.style.display = 'flex';
     console.log('✅ Modal displayed');
+}
+
+// Function to open the create event modal for editing
+function openEditEventModal(event) {
+    console.log('📝 Opening edit modal for event:', event);
+    
+    const createModal = document.getElementById('modalOverlay');
+    
+    if (!createModal) {
+        console.error('❌ Modal not found');
+        return;
+    }
+    
+    // Pre-fill all form fields with existing event data
+    const titleField = createModal.querySelector('input[name="title"]') || createModal.querySelector('#eventTitle');
+    const dateField = createModal.querySelector('input[name="date"]') || createModal.querySelector('#eventDate');
+    const startTimeField = createModal.querySelector('input[name="startTime"]') || createModal.querySelector('#startTime');
+    const endTimeField = createModal.querySelector('input[name="endTime"]') || createModal.querySelector('#endTime');
+    const locationField = createModal.querySelector('input[name="location"]') || createModal.querySelector('#eventLocation');
+    const descriptionField = createModal.querySelector('textarea[name="description"]') || createModal.querySelector('#eventDescription');
+    const clubSelect = createModal.querySelector('select[name="club"]') || createModal.querySelector('#clubSelect');
+    
+    if (titleField) titleField.value = event.title || '';
+    if (dateField) dateField.value = event.date || '';
+    if (startTimeField) startTimeField.value = event.startTime || '';
+    if (endTimeField) endTimeField.value = event.endTime || '';
+    if (locationField) locationField.value = event.location || event.space || '';
+    if (descriptionField) descriptionField.value = event.description || '';
+    if (clubSelect) clubSelect.value = event.clubId || '';
+    
+    // Handle topics/interests if they exist
+    const topicsCheckboxes = createModal.querySelectorAll('input[name="topics"]');
+    if (topicsCheckboxes.length > 0 && event.topics) {
+        topicsCheckboxes.forEach(checkbox => {
+            checkbox.checked = event.topics.includes(checkbox.value);
+        });
+    }
+    
+    // Store the event ID so we know this is an edit operation
+    createModal.setAttribute('data-editing-event-id', event.firebaseId);
+    
+    // Update modal title to indicate editing
+    const modalTitle = createModal.querySelector('.modal-title') || createModal.querySelector('h2');
+    if (modalTitle) {
+        modalTitle.textContent = 'Edit Event';
+    }
+    
+    createModal.style.display = 'flex';
+    console.log('✅ Edit modal opened');
+}
+
+async function updateEventInFirebase(eventId, eventData) {
+    try {
+        console.log('📝 Updating event:', eventId, eventData);
+        
+        await db.collection('events').doc(eventId).update({
+            ...eventData,
+            updatedAt: new Date()
+        });
+        
+        console.log('✅ Event updated successfully');
+        
+        // Clear the editing state
+        const createModal = document.getElementById('modalOverlay');
+        if (createModal) {
+            createModal.removeAttribute('data-editing-event-id');
+            const modalTitle = createModal.querySelector('.modal-title') || createModal.querySelector('h2');
+            if (modalTitle) modalTitle.textContent = 'Create Event';
+        }
+        
+        loadEventsFromFirebase();
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error updating event:', error);
+        return false;
+    }
 }
 
 
@@ -1609,9 +1755,14 @@ function setupRSVPButtonForEvent(event) {
     
     if (!rsvpBtn) {
         console.error('❌ RSVP button not found with any selector');
-        console.log('Available buttons in modal:', 
-            Array.from(document.querySelectorAll('#eventModal button')).map(btn => btn.className)
-        );
+        return;
+    }
+    
+    const isCreator = currentUser && event.createdBy === currentUser.uid;
+    
+    // If user is the creator, hide/remove the RSVP button completely
+    if (isCreator) {
+        rsvpBtn.style.display = 'none';
         return;
     }
     
@@ -1622,15 +1773,9 @@ function setupRSVPButtonForEvent(event) {
     
     // Check if user is already attending
     const isAttending = currentUser && event.attendees && event.attendees.includes(currentUser.uid);
-    const isCreator = currentUser && event.createdBy === currentUser.uid;
     
     // Update button text and state
-    if (isCreator) {
-        rsvpBtn.textContent = 'You created this event';
-        rsvpBtn.disabled = true;
-        rsvpBtn.style.opacity = '0.6';
-        return;
-    } else if (isAttending) {
+    if (isAttending) {
         rsvpBtn.textContent = 'Leave Event';
         rsvpBtn.classList.add('secondary');
         rsvpBtn.classList.remove('primary');
@@ -1642,6 +1787,7 @@ function setupRSVPButtonForEvent(event) {
     
     rsvpBtn.disabled = false;
     rsvpBtn.style.opacity = '1';
+    rsvpBtn.style.display = 'block'; // Make sure it's visible for non-owners
     
     // Add the click event listener
     rsvpBtn.addEventListener('click', async function(e) {
@@ -1649,8 +1795,6 @@ function setupRSVPButtonForEvent(event) {
         e.stopPropagation();
         
         console.log('🎯 RSVP button clicked!');
-        console.log('👤 Current user:', currentUser ? currentUser.uid : 'null');
-        console.log('📅 Event:', event);
         
         if (!currentUser) {
             alert('Please log in to RSVP');
@@ -1671,19 +1815,13 @@ function setupRSVPButtonForEvent(event) {
         try {
             let success = false;
             
-          if (isAttending) {
-    console.log('📤 Leaving event...');
-    success = await leaveEvent(event.firebaseId);
-    if (success) {
-        // Button text will be updated by the function that called this
-    }
-} else {
-    console.log('📥 Joining event...');
-    success = await joinEvent(event.firebaseId);
-    if (success) {
-        // Button text will be updated by the function that called this
-    }
-}
+            if (isAttending) {
+                console.log('📤 Leaving event...');
+                success = await leaveEvent(event.firebaseId);
+            } else {
+                console.log('📥 Joining event...');
+                success = await joinEvent(event.firebaseId);
+            }
             
             if (success) {
                 // Close modal and refresh
@@ -1708,7 +1846,6 @@ function setupRSVPButtonForEvent(event) {
     
     console.log('✅ RSVP button event listener attached');
 }
-
     // Function to generate a random color for the event
     function getRandomColor() {
         const colors = [
@@ -1728,9 +1865,16 @@ firebase.auth().onAuthStateChanged((user) => {
     }
 });
 
-   function renderEvents() {
+function renderEvents() {
     // Clear all existing event blocks
        document.querySelectorAll('.event-block').forEach(el => el.remove());
+    
+    // ALSO remove any existing × spans that might have been added elsewhere
+    document.querySelectorAll('.event-title span').forEach(span => {
+        if (span.textContent.includes('×')) {
+            span.remove();
+        }
+    });
     
     // Sort events by time with null checks
     events.sort((a, b) => {
@@ -1746,7 +1890,7 @@ firebase.auth().onAuthStateChanged((user) => {
     });
     
     // Add event blocks for each event
-   events.forEach(event => {
+    events.forEach(event => {
         const dayElement = document.querySelector(`.calendar-day[data-date="${event.date}"]`);
         if (dayElement) {
             const eventBlock = document.createElement('div');
@@ -1759,25 +1903,6 @@ firebase.auth().onAuthStateChanged((user) => {
                 <div class="event-title">${event.title}</div>
                 <div class="event-club">${event.clubName || ''}</div>
             `;
-
-            if (currentUser && event.createdBy === currentUser.uid) {
-                const deleteIcon = document.createElement('span');
-                deleteIcon.textContent = ' ×';
-                deleteIcon.style.cursor = 'pointer';
-                deleteIcon.style.color = 'red';
-                deleteIcon.title = 'Delete event';
-                
-                deleteIcon.onclick = async (e) => {
-                    e.stopPropagation();
-                    if (confirm('Delete this event?')) {
-                        await deleteEventFromFirebase(event.firebaseId);
-                        loadEventsFromFirebase(); // Refresh calendar
-                    }
-                };
-                
-                // Add delete icon to event title
-                eventBlock.querySelector('.event-title').appendChild(deleteIcon);
-            }
             
             eventBlock.style.backgroundColor = event.color;
             eventBlock.addEventListener('click', function(e) {
@@ -1789,6 +1914,7 @@ firebase.auth().onAuthStateChanged((user) => {
         }
     });
 }
+
     
     // Replace any alert-based event display with this function
 

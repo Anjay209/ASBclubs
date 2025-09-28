@@ -907,11 +907,39 @@ body {
 }
 
 .event-modal-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #e5e7eb;
     display: flex;
+    gap: 12px;
     justify-content: flex-end;
-    gap: 10px;
+    padding: 20px;
+       border-top: 1px solid #e5e7eb;
+}
+
+.event-modal-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-event-btn {
+    background: #3b82f6;
+    color: white;
+}
+
+.edit-event-btn:hover {
+    background: #2563eb;
+}
+
+.delete-event-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-event-btn:hover {
+    background: #dc2626;
 }
 
 .event-modal-btn {

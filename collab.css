@@ -1975,3 +1975,48 @@ body {
     background-color: #f3f4f6;
     color: #374151;
 }
+
+/* SIMPLE FIX: Add this CSS */
+.equipment-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-reserve, .btn-return, .btn-request, .btn-waitlist {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-reserve { background: #4CAF50; color: white; }
+.btn-return { background: #2196F3; color: white; }
+.btn-request { background: #FF9800; color: white; }
+.btn-waitlist { background: #9C27B0; color: white; }
+
+.reserved-by {
+    display: block;
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Add this to your CSS */
+.btn-view-waitlist {
+    background: #6c757d;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.equipment-status::after {
+    content: attr(data-waitlist);
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 3px;
+}

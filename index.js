@@ -29,6 +29,7 @@ let currentSurveyData = null;
       const auth = firebase.auth();
 const db = firebase.firestore();
 
+
          let currentUser = null;
         let currentClubId = null;
         
@@ -66,6 +67,209 @@ firebase.auth().onAuthStateChanged((user) => {
         window.location.href = 'login.html';
     }
 });
+
+
+        // Initialize account summary
+        async function initializeAccountSummary() {
+            if (!currentUser) {
+                showLoginPrompt();
+                return;
+            }
+
+            try {
+                await loadUserProfile();
+            } catch (error) {
+                console.error('Error loading account summary:', error);
+                showErrorState();
+            }
+        }
+
+        async function loadUserProfile() {
+            // Replace with your actual Firebase call
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            
+            if (!userDoc.exists) {
+                showErrorState();
+                return;
+            }
+
+            const userData = userDoc.data();
+            updateAccountHeader(userData);
+            await loadUserClubs(userData);
+        }
+
+       function updateAccountHeader(userData) {
+    const nameEl = document.getElementById('accountName');
+    const emailEl = document.getElementById('accountEmail');
+    const avatarEl = document.getElementById('accountAvatar');
+
+    // Safely access fields that might not exist
+    const displayName = userData.name || userData.email || currentUser?.email || 'Unknown User';
+    const email = userData.email || currentUser?.email || 'No email';
+
+    // Update account header section:
+if (nameEl) {
+    nameEl.innerHTML = `
+        ${userData.name || userData.email || 'Unknown User'}
+        <button class="edit-btn" onclick="editUsername()" title="Edit name">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"/>
+            </svg>
+        </button>
+    `;
+}
+
+if (emailEl) {
+    emailEl.innerHTML = `
+        ${userData.email || user.email}
+        <button class="edit-btn" onclick="editEmail()" title="Edit email">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"/>
+            </svg>
+        </button>
+    `;
+}
+
+// Update clubs section
+}
+
+        async function loadUserClubs(userData) {
+    // Safely get arrays, defaulting to empty arrays if fields don't exist
+    const memberClubs = Array.isArray(userData.clubs) ? userData.clubs : [];
+    const officerClubs = Array.isArray(userData.officerClubs) ? userData.officerClubs : [];
+    const ownedClubs = Array.isArray(userData.ownedClubs) ? userData.ownedClubs : [];
+
+    console.log('Loading clubs:', { memberClubs, officerClubs, ownedClubs }); // Debug log
+
+    // Load club details for each category
+    await Promise.all([
+        renderClubSection('memberClubs', memberClubs, 'Member'),
+        renderClubSection('officerClubs', officerClubs, 'Officer'),
+        renderClubSection('ownedClubs', ownedClubs, 'Owner')
+    ]);
+
+    // Show/hide sections based on content
+    const officerSection = document.getElementById('officerClubsSection');
+    const ownedSection = document.getElementById('ownedClubsSection');
+    
+    if (officerSection) {
+        officerSection.style.display = officerClubs.length > 0 ? 'block' : 'none';
+    }
+    
+    if (ownedSection) {
+        ownedSection.style.display = ownedClubs.length > 0 ? 'block' : 'none';
+    }
+}
+
+        async function renderClubSection(containerId, clubIds, role) {
+            const container = document.getElementById(containerId);
+            
+            if (clubIds.length === 0) {
+                if (containerId === 'memberClubs') {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p class="empty-state-text">You haven't joined any clubs yet</p>
+                            <button class="join-clubs-btn" onclick="window.location.href='clubs.html'">
+                                Browse Clubs
+                            </button>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // Fetch club details
+            const clubPromises = clubIds.map(async (clubId) => {
+                try {
+                    const clubDoc = await db.collection('clubs').doc(clubId).get();
+                    return clubDoc.exists ? { id: clubId, ...clubDoc.data() } : null;
+                } catch (error) {
+                    console.error(`Error loading club ${clubId}:`, error);
+                    return null;
+                }
+            });
+
+            const clubs = (await Promise.all(clubPromises)).filter(club => club !== null);
+
+            container.innerHTML = clubs.map(club => `
+                <div class="club-item">
+                    <div class="club-info">
+                        <div class="club-icon">${club.name.charAt(0).toUpperCase()}</div>
+                        <div class="club-details">
+                            <h4>${club.name}</h4>
+                            <p class="club-role">${role}</p>
+                        </div>
+                    </div>
+                    <button class="edit-btn" onclick="editClubRole('${club.id}', '${role}')" title="Edit role">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"/>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function editClubRole(clubId, currentRole) {
+            // This would open a modal or inline editor
+            const newRole = prompt(`Edit your role in this club (current: ${currentRole}):`);
+            
+            if (newRole && newRole !== currentRole) {
+                updateClubRole(clubId, currentRole, newRole);
+            }
+        }
+
+        async function updateClubRole(clubId, oldRole, newRole) {
+            try {
+                // Update Firebase - this is a simplified example
+                // You'd need proper logic to move between member/officer/owner arrays
+                console.log(`Updating club ${clubId} role from ${oldRole} to ${newRole}`);
+                
+                // Refresh the account summary
+                await loadUserProfile();
+                
+                alert('Role updated successfully!');
+            } catch (error) {
+                console.error('Error updating club role:', error);
+                alert('Failed to update role. Please try again.');
+            }
+        }
+
+        function showLoginPrompt() {
+            document.getElementById('accountSummary').innerHTML = `
+                <div class="account-header">
+                    <div class="account-avatar">?</div>
+                    <h3 class="account-name">Not Logged In</h3>
+                    <p class="account-email">Please log in to view your account</p>
+                </div>
+                <div class="account-body">
+                    <div class="empty-state">
+                        <button class="join-clubs-btn" onclick="window.location.href='login.html'">
+                            Log In
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showErrorState() {
+            document.getElementById('accountSummary').innerHTML = `
+                <div class="account-header">
+                    <div class="account-avatar">!</div>
+                    <h3 class="account-name">Error</h3>
+                    <p class="account-email">Failed to load account data</p>
+                </div>
+                <div class="account-body">
+                    <div class="empty-state">
+                        <button class="join-clubs-btn" onclick="initializeAccountSummary()">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize when page loads
+     
 
 
 function debugCollaborationSystem() {
@@ -3324,7 +3528,8 @@ auth.onAuthStateChanged(async (user) => {
                 
                 .feed-card-half {
                     flex: 1;
-                    min-width: 400px;
+               min-width: 365px;
+      
                 }
             `;
             document.head.appendChild(style);
@@ -6501,7 +6706,240 @@ setupSurveyModal();
 
     
 });
+setTimeout(() => initializeAccountSummary(), 1000);
 
 console.log('Community platform JavaScript loaded!');
 
+let currentUser = null;
+document.addEventListener('DOMContentLoaded', () => {
+    firebase.auth().onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user) {
+            console.log("Loading account summary for:", user.email);
+            loadAccountSummary(user);
+        } else {
+            showLoginPrompt();
+        }
+    });
+});
 
+// Self-contained account summary function
+function loadAccountSummary(user) {
+    const db = firebase.firestore();
+    
+    db.collection('users').doc(user.uid).get().then(doc => {
+        if (doc.exists) {
+            const userData = doc.data();
+            
+            // Update account header
+            const nameEl = document.getElementById('accountName');
+            const emailEl = document.getElementById('accountEmail');
+            const avatarEl = document.getElementById('accountAvatar');
+            
+            if (nameEl) {
+    nameEl.innerHTML = `
+        ${userData.name || userData.email || 'Unknown User'}
+        <button class="edit-btn" onclick="editUsername()" title="Edit name">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"/>
+            </svg>
+        </button>
+    `;
+}
+
+if (emailEl) {
+    emailEl.innerHTML = `
+        ${userData.email || user.email}
+        <button class="edit-btn" onclick="editEmail()" title="Edit email">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.828-2.828z"/>
+            </svg>
+        </button>
+    `;
+}
+            if (avatarEl) avatarEl.textContent = (userData.name || userData.email || 'U').charAt(0).toUpperCase();
+            
+            // Load member clubs
+            const memberClubs = userData.clubs || [];
+            const memberClubsContainer = document.getElementById('memberClubs');
+            
+            if (memberClubsContainer) {
+                if (memberClubs.length === 0) {
+                    memberClubsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <p class="empty-state-text">You haven't joined any clubs yet</p>
+                            <button class="join-clubs-btn" onclick="window.location.href='clubs.html'">Browse Clubs</button>
+                        </div>
+                    `;
+                } else {
+                    // Load club details
+                    Promise.all(memberClubs.map(clubId => 
+                        db.collection('clubs').doc(clubId).get().catch(() => null)
+                    )).then(clubDocs => {
+                        const clubs = clubDocs.filter(doc => doc && doc.exists).map(doc => ({
+                            id: doc.id, 
+                            ...doc.data()
+                        }));
+                        
+                       // Replace this line in your existing loadAccountSummary function:
+memberClubsContainer.innerHTML = clubs.map(club => `
+    <div class="club-item">
+        <div class="club-info">
+            <div class="club-icon">${club.name.charAt(0).toUpperCase()}</div>
+            <div class="club-details">
+                <h4>${club.name}</h4>
+                <p class="club-role">Member</p>
+            </div>
+        </div>
+        <button class="delete-btn" onclick="deleteClubFromUser('${club.id}', '${club.name}')" title="Leave club">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+            </svg>
+        </button>
+    </div>
+`).join('');
+                    });
+                }
+            }
+            
+            // Handle officer/owned clubs
+            const officerSection = document.getElementById('officerClubsSection');
+            const ownedSection = document.getElementById('ownedClubsSection');
+            
+            if (officerSection) {
+                officerSection.style.display = (userData.officerClubs && userData.officerClubs.length > 0) ? 'block' : 'none';
+            }
+            
+            if (ownedSection) {
+                ownedSection.style.display = (userData.ownedClubs && userData.ownedClubs.length > 0) ? 'block' : 'none';
+            }
+            
+        } else {
+            showLoginPrompt();
+        }
+    }).catch(error => {
+        console.error('Error loading user data:', error);
+        showLoginPrompt();
+    });
+}
+
+function showLoginPrompt() {
+    const accountSummary = document.getElementById('accountSummary');
+    if (accountSummary) {
+        accountSummary.innerHTML = `
+            <div class="account-header">
+                <div class="account-avatar">?</div>
+                <h3 class="account-name">Not Logged In</h3>
+                <p class="account-email">Please log in to view your account</p>
+            </div>
+        `;
+    }
+}
+
+// Edit club role function
+function editClubRole(clubId, currentRole) {
+    const newRole = prompt(`Edit your role in this club (current: ${currentRole}):`);
+    
+    if (newRole && newRole !== currentRole) {
+        updateClubRole(clubId, currentRole, newRole);
+    }
+}
+
+// Update club role in Firebase
+function updateClubRole(clubId, oldRole, newRole) {
+    const user = firebase.auth().currentUser;
+    const db = firebase.firestore();
+    
+    if (!user) {
+        alert('Please log in to edit your role');
+        return;
+    }
+    
+    // Update the role in Firebase
+    db.collection('users').doc(user.uid).update({
+        [`clubRoles.${clubId}`]: newRole
+    }).then(() => {
+        alert('Role updated successfully!');
+        loadAccountSummary(user); // Reload to show updated role
+    }).catch(error => {
+        console.error('Error updating role:', error);
+        alert('Failed to update role. Please try again.');
+    });
+}
+
+// Make functions globally accessible
+window.editClubRole = editClubRole;
+window.updateClubRole = updateClubRole;
+
+// Edit username function
+function editUsername() {
+    const user = firebase.auth().currentUser;
+    const db = firebase.firestore();
+    
+    const currentName = document.getElementById('accountName').textContent;
+    const newName = prompt(`Edit your name (current: ${currentName}):`);
+    
+    if (newName && newName !== currentName) {
+        db.collection('users').doc(user.uid).update({
+            name: newName
+        }).then(() => {
+            document.getElementById('accountName').textContent = newName;
+            document.getElementById('accountAvatar').textContent = newName.charAt(0).toUpperCase();
+            alert('Name updated successfully!');
+        }).catch(error => {
+            console.error('Error updating name:', error);
+            alert('Failed to update name. Please try again.');
+        });
+    }
+}
+
+// Edit email function
+function editEmail() {
+    const user = firebase.auth().currentUser;
+    const db = firebase.firestore();
+    
+    const currentEmail = document.getElementById('accountEmail').textContent;
+    const newEmail = prompt(`Edit your email (current: ${currentEmail}):`);
+    
+    if (newEmail && newEmail !== currentEmail) {
+        // Update in Firestore
+        db.collection('users').doc(user.uid).update({
+            email: newEmail
+        }).then(() => {
+            document.getElementById('accountEmail').textContent = newEmail;
+            alert('Email updated successfully!');
+        }).catch(error => {
+            console.error('Error updating email:', error);
+            alert('Failed to update email. Please try again.');
+        });
+    }
+}
+
+// Delete club from user's list
+function deleteClubFromUser(clubId, clubName) {
+    const user = firebase.auth().currentUser;
+    const db = firebase.firestore();
+    
+    if (confirm(`Are you sure you want to leave "${clubName}"?`)) {
+        // Remove from user's clubs array
+        db.collection('users').doc(user.uid).update({
+            clubs: firebase.firestore.FieldValue.arrayRemove(clubId)
+        }).then(() => {
+            // Also decrement the club's member count
+            return db.collection('clubs').doc(clubId).update({
+                memberCount: firebase.firestore.FieldValue.increment(-1)
+            });
+        }).then(() => {
+            alert(`Successfully left "${clubName}"`);
+            loadAccountSummary(user); // Reload to update display
+        }).catch(error => {
+            console.error('Error leaving club:', error);
+            alert('Failed to leave club. Please try again.');
+        });
+    }
+}
+
+// Make functions globally accessible
+window.editUsername = editUsername;
+window.editEmail = editEmail;
+window.deleteClubFromUser = deleteClubFromUser;

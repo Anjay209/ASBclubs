@@ -2,6 +2,7 @@
 // COMPLETE SEARCH FIX - ADD THIS TO YOUR CODE
 
 // 1. Make searchTemplates globally available (outside DOMContentLoaded)
+
 window.searchTemplates = function() {
     console.log('🔍 Search function called');
     
@@ -130,6 +131,7 @@ window.openTemplateModal = function() {
 document.addEventListener('DOMContentLoaded', function() {
 
 
+   
 
   window.openTemplateModal = function () {
     document.getElementById('templateModal').style.display = 'block';
@@ -1480,34 +1482,65 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // Load equipment from Firebase
+// SIMPLE FIX: Update loadEquipment to show waitlist info
 function loadEquipment(category) {
     const equipmentGrid = document.getElementById('equipmentGrid');
     equipmentGrid.innerHTML = '<div class="loading">Loading equipment...</div>';
     
     db.collection('equipment')
         .where('category', '==', category)
-        .onSnapshot(snapshot => {
+        .onSnapshot(async (snapshot) => {
             equipmentGrid.innerHTML = '';
+            
+            if (snapshot.empty) {
+                equipmentGrid.innerHTML = '<p class="no-equipment">No equipment found.</p>';
+                return;
+            }
+            
+            // Load waitlist counts for all equipment
+            const equipmentIds = snapshot.docs.map(doc => doc.id);
+            const waitlistCounts = await getWaitlistCounts(equipmentIds);
             
             snapshot.forEach(doc => {
                 const equipment = doc.data();
+                const waitlistCount = waitlistCounts[doc.id] || 0;
+                equipment.waitlistCount = waitlistCount; // Add to equipment object
+                
                 const equipmentCard = createEquipmentCard(doc.id, equipment);
                 equipmentGrid.appendChild(equipmentCard);
             });
-            
-            if (snapshot.empty) {
-                equipmentGrid.innerHTML = '<p class="no-equipment">No equipment found in this category.</p>';
-            }
-        }, error => {
-            console.error('Error loading equipment:', error);
-            equipmentGrid.innerHTML = '<p class="error">Error loading equipment. Please try again.</p>';
         });
 }
 
+// Helper function to get waitlist counts
+async function getWaitlistCounts(equipmentIds) {
+    const counts = {};
+    
+    try {
+        const waitlistDocs = await db.collection('equipmentWaitlists')
+            .where('equipmentId', 'in', equipmentIds)
+            .get();
+            
+        waitlistDocs.forEach(doc => {
+            const data = doc.data();
+            counts[data.equipmentId] = data.users ? data.users.length : 0;
+        });
+    } catch (error) {
+        console.error('Error getting waitlist counts:', error);
+    }
+    
+    return counts;
+}
+
+
 // Create equipment card element
+// SIMPLE FIX: Replace your createEquipmentCard function with this
+// SIMPLE FIX: Update your equipment card creation
 function createEquipmentCard(equipmentId, equipment) {
     const card = document.createElement('div');
     card.className = `equipment-card ${equipment.inUse ? 'in-use' : 'available'}`;
+    
+    const isReservedByCurrentUser = equipment.reservedBy === currentUser?.email;
     
     card.innerHTML = `
         <div class="equipment-info">
@@ -1521,24 +1554,231 @@ function createEquipmentCard(equipmentId, equipment) {
             </div>
         </div>
         <div class="equipment-controls">
-            <label class="checkbox-container">
-                <input type="checkbox" 
-                       ${equipment.inUse ? 'checked' : ''} 
-                       data-equipment-id="${equipmentId}"
-                       ${equipment.inUse && equipment.reservedBy !== currentUser?.email ? 'disabled' : ''}>
-                <span class="checkmark"></span>
-                <span class="checkbox-label">${equipment.inUse ? 'In Use' : 'Reserve'}</span>
-            </label>
+            ${!equipment.inUse ? `
+                <button class="btn-reserve" data-equipment-id="${equipmentId}">
+                    Reserve
+                </button>
+            ` : isReservedByCurrentUser ? `
+                <button class="btn-return" data-equipment-id="${equipmentId}">
+                    Return Item
+                </button>
+                <button class="btn-request" data-equipment-id="${equipmentId}">
+                    Ask for Return
+                </button>
+            ` : `
+                <button class="btn-waitlist" data-equipment-id="${equipmentId}">
+                    Join Waitlist
+                </button>
+                <button class="btn-view-waitlist" data-equipment-id="${equipmentId}">
+                    View Waitlist
+                </button>
+            `}
         </div>
     `;
     
-    // Add event listener to the checkbox
-    const checkbox = card.querySelector('input[type="checkbox"]');
-    checkbox.addEventListener('change', function() {
-        toggleEquipmentStatus(equipmentId, this.checked);
-    });
+    // Add click listeners
+    const reserveBtn = card.querySelector('.btn-reserve');
+    const returnBtn = card.querySelector('.btn-return');
+    const requestBtn = card.querySelector('.btn-request');
+    const waitlistBtn = card.querySelector('.btn-waitlist');
+    const viewWaitlistBtn = card.querySelector('.btn-view-waitlist');
+    
+    if (reserveBtn) reserveBtn.addEventListener('click', () => reserveEquipment(equipmentId));
+    if (returnBtn) returnBtn.addEventListener('click', () => returnEquipment(equipmentId));
+    if (requestBtn) requestBtn.addEventListener('click', () => askForReturn(equipmentId));
+    if (waitlistBtn) waitlistBtn.addEventListener('click', () => joinWaitlist(equipmentId));
+    if (viewWaitlistBtn) viewWaitlistBtn.addEventListener('click', () => viewWaitlist(equipmentId));
     
     return card;
+}
+
+
+ // SIMPLE FIREBASE WAITLIST INTEGRATION
+async function reserveEquipment(equipmentId) {
+    if (!currentUser) {
+        alert('Please log in to reserve equipment');
+        return;
+    }
+    
+    try {
+        // Check if equipment is available
+        const equipmentDoc = await db.collection('equipment').doc(equipmentId).get();
+        const equipment = equipmentDoc.data();
+        
+        if (equipment.inUse) {
+            alert('This equipment is already in use. Would you like to join the waitlist?');
+            return;
+        }
+        
+        await db.collection('equipment').doc(equipmentId).update({
+            inUse: true,
+            reservedBy: currentUser.email,
+            reservedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Equipment reserved!');
+        loadEquipment(currentCategory);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to reserve equipment');
+    }
+}
+
+async function returnEquipment(equipmentId) {
+    if (!currentUser) {
+        alert('Please log in to return equipment');
+        return;
+    }
+    
+    try {
+        // Check waitlist first
+        const waitlistDoc = await db.collection('equipmentWaitlists').doc(equipmentId).get();
+        const waitlist = waitlistDoc.exists ? waitlistDoc.data().users : [];
+        
+        if (waitlist.length > 0) {
+            // Notify next person and assign to them
+            const nextUser = waitlist[0];
+            await db.collection('equipment').doc(equipmentId).update({
+                inUse: true,
+                reservedBy: nextUser.email,
+                reservedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // Remove from waitlist
+            const updatedWaitlist = waitlist.slice(1);
+            await db.collection('equipmentWaitlists').doc(equipmentId).update({
+                users: updatedWaitlist
+            });
+            
+            alert('Equipment returned and assigned to next person in waitlist!');
+        } else {
+            // No waitlist, just return
+            await db.collection('equipment').doc(equipmentId).update({
+                inUse: false,
+                reservedBy: null,
+                reservedAt: null
+            });
+            alert('Equipment returned!');
+        }
+        
+        loadEquipment(currentCategory);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to return equipment');
+    }
+}
+
+async function askForReturn(equipmentId) {
+    // Simple notification system - just alert for now
+    alert('Request sent to current user to return the equipment early.');
+}
+
+async function joinWaitlist(equipmentId) {
+    if (!currentUser) {
+        alert('Please log in to join waitlist');
+        return;
+    }
+    
+    try {
+        const waitlistRef = db.collection('equipmentWaitlists').doc(equipmentId);
+        const waitlistDoc = await waitlistRef.get();
+        
+        const userData = {
+            userId: currentUser.uid,
+            email: currentUser.email,
+            name: currentUser.displayName || 'User',
+            joinedAt: new Date()
+        };
+        
+        if (!waitlistDoc.exists) {
+            // Create new waitlist
+            await waitlistRef.set({
+                equipmentId: equipmentId,
+                users: [userData],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            // Add to existing waitlist
+            const currentWaitlist = waitlistDoc.data().users || [];
+            
+            // Check if already in waitlist
+            if (currentWaitlist.some(user => user.userId === currentUser.uid)) {
+                alert('You are already in the waitlist!');
+                return;
+            }
+            
+            await waitlistRef.update({
+                users: [...currentWaitlist, userData]
+            });
+        }
+        
+        alert(`Joined waitlist! Position: #${(waitlistDoc.exists ? waitlistDoc.data().users.length : 0) + 1}`);
+        loadEquipment(currentCategory);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to join waitlist');
+    }
+}
+
+// NEW FUNCTION: View waitlist
+async function viewWaitlist(equipmentId) {
+    try {
+        const waitlistDoc = await db.collection('equipmentWaitlists').doc(equipmentId).get();
+        
+        if (!waitlistDoc.exists || !waitlistDoc.data().users.length) {
+            alert('No one in the waitlist yet.');
+            return;
+        }
+        
+        const waitlist = waitlistDoc.data().users;
+        let waitlistText = 'Current Waitlist:\n\n';
+        
+        waitlist.forEach((user, index) => {
+            const isYou = user.userId === currentUser?.uid;
+            waitlistText += `${index + 1}. ${user.name} (${user.email}) ${isYou ? ' ← YOU' : ''}\n`;
+        });
+        
+        const userInWaitlist = waitlist.some(user => user.userId === currentUser.uid);
+        
+        if (userInWaitlist) {
+            const userPosition = waitlist.findIndex(user => user.userId === currentUser.uid) + 1;
+            waitlistText += `\nYour position: #${userPosition}`;
+            
+            if (confirm(waitlistText + '\n\nDo you want to leave the waitlist?')) {
+                await leaveWaitlist(equipmentId);
+            }
+        } else {
+            alert(waitlistText);
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load waitlist');
+    }
+}
+
+// NEW FUNCTION: Leave waitlist
+async function leaveWaitlist(equipmentId) {
+    if (!currentUser) return;
+    
+    try {
+        const waitlistRef = db.collection('equipmentWaitlists').doc(equipmentId);
+        const waitlistDoc = await waitlistRef.get();
+        
+        if (waitlistDoc.exists) {
+            const currentWaitlist = waitlistDoc.data().users || [];
+            const updatedWaitlist = currentWaitlist.filter(user => user.userId !== currentUser.uid);
+            
+            await waitlistRef.update({
+                users: updatedWaitlist
+            });
+            
+            alert('You have left the waitlist.');
+            loadEquipment(currentCategory);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to leave waitlist');
+    }
 }
 
 // Toggle equipment status

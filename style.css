@@ -352,7 +352,294 @@ body {
     flex: 1;
     padding: 24px 32px;
     max-width: 80vw;
+    position: relative;
+    display: flex;
 }
+
+
+/* Edit button styling - inline with text */
+.edit-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+
+
+/* X Delete button styling */
+.delete-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.delete-btn:hover {
+    color: #ff4757;
+    background: rgba(255, 71, 87, 0.2);
+    border-color: rgba(255, 71, 87, 0.4);
+    transform: scale(1.1);
+}
+
+
+
+/* Account header layout fixes */
+.account-name {
+    display: flex;
+    align-items: center;
+    margin: 8px 0 4px 0 !important;
+    line-height: 1.2;
+    padding-right: 50px;
+}
+
+.account-email {
+    display: flex;
+    align-items: center;
+
+    line-height: 1.2;
+        padding-right: 50px;
+}
+
+/* Club item layout */
+/* Club item layout to ensure X stays on right */
+.club-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.club-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    gap: 12px;
+}
+
+
+        .main-feed {
+            flex: 1;
+            min-width: 0; /* Prevents flex items from overflowing */
+            max-width: 1100px;
+        }
+
+        .section{
+           max-width: 750px;
+        }
+
+        /* Floating account summary */
+        .account-summary {
+            position: sticky;
+            top: 2rem;
+            width: 300px;
+            height: fit-content;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .account-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+
+        .account-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 0.5rem;
+        }
+
+        .account-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
+            padding-right: 500px;
+
+        }
+
+        .account-email {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0.25rem 0 0 0;
+        }
+
+        .account-body {
+            padding: 1.5rem;
+        }
+
+        .club-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .club-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .club-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .club-item:hover {
+            background: #f3f4f6;
+            transform: translateY(-1px);
+        }
+
+        .club-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .club-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .club-icon {
+            width: 32px;
+            height: 32px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .club-details h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+            color: #111827;
+        }
+
+        .club-role {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+               color: #e5e7eb;
+        }
+
+    
+
+        .edit-btn svg {
+            width: 16px;
+            height: 16px;
+            color: white;
+        }
+
+        .no-clubs {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .empty-state-text {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 1rem;
+        }
+
+        .join-clubs-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .join-clubs-btn:hover {
+            background: #2563eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .account-summary {
+                position: relative;
+                width: 100%;
+                top: 0;
+            }
+        }
 
 /* Add these styles to your existing CSS */
 .dashboard-container {
@@ -553,7 +840,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    max-width: 800px;
+    max-width: 10000px;
     margin: 0 auto;
     padding-bottom: 32px;
 }
@@ -567,6 +854,7 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
     position: relative;
+    max-width: 750px;
 }
 
 .feed-card:hover {
@@ -594,6 +882,7 @@ body {
     background: white;
     border: 2px solid #fce7f3;
     position: relative;
+    max-width: 175px !important;
 }
 
 .feed-card-half::before {

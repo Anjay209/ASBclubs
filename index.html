@@ -120,46 +120,76 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+       <main class="main-content">
+        <div class="main-feed">
+          <div class="section">
             <div class="content-header">
-                <h1>New Clubs</h1>
-                <div class="content-controls">
-                </div>
+                <h1></h1>
+                <div class="content-controls"></div>
             </div>
 
             <div class="feed-grid-layout">
-                <!-- Row 1: Full width card -->
                 <div class="feed-card feed-card-wide feed-card-gray-bg">
                     <h2 class="feed-card-title-lg">Featured Clubs</h2>
                     <p class="feed-card-description">These are clubs that members have found tight-knit communities in.</p>
                     <div class="feed-card-button-group">
-                        <button class="feed-button-primary"> <a href="clubs.html" class="go"> See All Clubs </a></button>
+                        <button class="feed-button-primary">
+                            <a href="clubs.html" class="go">See All Clubs</a>
+                        </button>
                     </div>
                 </div>
-
-                <!-- Row 2: Two half-width cards -->
-               <div id="clubs-container"></div>
+                <div id="clubs-container"></div>
             </div>
             
             <div class="content-header">
-                <h1>Upcoming</h1>
+                <h1></h1>
             </div>
             
             <div class="feed-grid-layout">
-                <!-- Row 3: Full width checklist -->
-               <div class="feed-card feed-card-wide">
-  <h3 class="feed-card-title-sm">Upcoming Events</h3>
-  <p class="feed-card-progress">0 upcoming events</p>
-  <ul class="feed-checklist-items">
-    <!-- Events will appear here -->
-  </ul>
+                <div class="feed-card feed-card-wide">
+                    <h3 class="feed-card-title-sm">Upcoming Events</h3>
+                    <p class="feed-card-progress">0 upcoming events</p>
+                    <ul class="feed-checklist-items">
+                        <!-- Events will appear here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
 </div>
+        <!-- Floating Account Summary -->
+        <div class="account-summary" id="accountSummary">
+            <div class="account-header">
+                <div class="account-avatar" id="accountAvatar">U</div>
+                <h3 class="account-name" id="accountName" style="text-align: center; padding-right: 500px;">Loading...</h3>
+                <p class="account-email" id="accountEmail">Loading...</p>
             </div>
             
-        
-            
-            
-        </main>
+            <div class="account-body">
+                <!-- Member Clubs Section -->
+                <div class="club-section" id="memberClubsSection">
+                    <h4 class="section-title">Member Clubs</h4>
+                    <div id="memberClubs">
+                        <div class="empty-state">
+                            <p class="empty-state-text">Loading clubs...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Officer Clubs Section -->
+                <div class="club-section" id="officerClubsSection" style="display: none;">
+                    <h4 class="section-title">Officer Clubs</h4>
+                    <div id="officerClubs"></div>
+                </div>
+
+                <!-- Owned Clubs Section -->
+                <div class="club-section" id="ownedClubsSection" style="display: none;">
+                    <h4 class="section-title">Owned Clubs</h4>
+                    <div id="ownedClubs"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
     </div>
 
     <!-- Add this to your index.html -->

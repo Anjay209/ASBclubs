@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anjay's Community</title>
+    <link rel="stylesheet" href="home2.css">
+     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-circle">HHS</div>
+            </div>
+            
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item">Home</a>
+            <a href="clubs.html" class="nav-item">Clubs</a>
+            <a href="events.html" class="nav-item">Events</a>
+            <a href="analytics.html" class="nav-item">Dashboard</a>
+            <button id="signOutBtn" onclick="firebase.auth().signOut()">Sign Out</button>
+        </nav>
+        
+        <div class="header-right">
+            
+            <button class="icon-btn">
+                <svg width="18" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+                    <path d="M13.73 21A2 2 0 0 1 10.27 21" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+           
+           
+         
+        </div>
+    </header>
+
+      <div class="container">
+        <h1 class="main-title typewriter typing" id="mainTitle"></h1>
+        <p class="subtitle typewriter" id="subtitle"></p>
+    </div>
+    <div class="gyatt"><button>hi</button></div>
+
+   
+    <script>
+        const mainText = "HOMESTEAD CLUBS";
+        const subText = "The one stop shop for everything related to clubs at Homestead!";
+        
+        const mainTitle = document.getElementById('mainTitle');
+        const subtitle = document.getElementById('subtitle');
+
+        function typeText(element, text, callback, delay = 100) {
+            element.innerHTML = '';
+            let i = 0;
+            
+            function typeChar() {
+                if (i < text.length) {
+                    const span = document.createElement('span');
+                    span.textContent = text[i];
+                    span.className = 'char';
+                    span.style.animationDelay = `${i * 0.05}s`;
+                    element.appendChild(span);
+                    i++;
+                    setTimeout(typeChar, delay);
+                } else {
+                    element.classList.remove('typing', 'subtitle-typing');
+                    if (callback) setTimeout(callback, 500);
+                }
+            }
+            
+            typeChar();
+        }
+
+        function startAnimation() {
+            // Add glow effect to main title
+            mainTitle.classList.add('glow');
+            
+            // Type main title first
+            typeText(mainTitle, mainText, () => {
+                // After main title is done, start subtitle
+                subtitle.classList.add('subtitle-typing', 'subtitle-glow');
+                typeText(subtitle, subText, null, 50);
+            }, 150);
+        }
+
+        // Start the animation when page loads
+        window.addEventListener('load', () => {
+            setTimeout(startAnimation, 500);
+        });
+
+     
+
+// Replace your transformToNewText function with this:
+let animationTriggered = false;
+
+window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    
+    if (scrollY > 200 && !animationTriggered) {
+        animationTriggered = true;
+        transformToNewText();
+    }
+});
+
+// Replace your transformToNewText function with this:
+function transformToNewText() {
+    const gyattSection = document.querySelector('.gyatt');
+    
+    // Only run once
+    if (gyattSection.dataset.transformed) return;
+    gyattSection.dataset.transformed = 'true';
+    
+    const newText = "THE PURPOSE";
+    
+    // Clear the existing content
+    gyattSection.innerHTML = '';
+    
+    // Create the new title
+    const newTitle = document.createElement('h1');
+    newTitle.className = 'main-title';
+    newTitle.textContent = newText;
+    newTitle.style.opacity = '0';
+    newTitle.style.transition = 'opacity 1s ease-in';
+    gyattSection.appendChild(newTitle);
+    
+    // Fade it in
+    setTimeout(() => {
+        newTitle.style.opacity = '1';
+    }, 100);
+}
+       function scrambleAndForm(targetText) {
+            mainTitle.innerHTML = '';
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            
+            // Create scrambled letters first
+            for (let i = 0; i < targetText.length; i++) {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.style.display = 'inline-block';
+                span.style.transition = 'all 0.1s ease';
+                mainTitle.appendChild(span);
+            }
+            
+            const spans = mainTitle.querySelectorAll('.char');
+            let iterations = 0;
+            
+            const scrambleInterval = setInterval(() => {
+                spans.forEach((span, index) => {
+                    if (iterations > index) {
+                        span.textContent = targetText[index];
+                        span.style.color = '#98f5e1';
+                    } else {
+                        span.textContent = chars[Math.floor(Math.random() * chars.length)];
+                        span.style.color = '#666';
+                    }
+                });
+                
+                iterations += 1/3;
+                
+                if (iterations >= targetText.length) {
+                    clearInterval(scrambleInterval);
+                    // Re-apply glow effect
+                    mainTitle.classList.add('glow');
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
